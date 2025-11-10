@@ -1,0 +1,1787 @@
+{
+  "source": "Thentia Scope Document - AZ Veterinary Board (COMPREHENSIVE)",
+  "generatedAt": "2025-10-19",
+  "version": "2.0 - Full Workflow",
+  "applicationTypes": [
+    {
+      "applicationType": "Vet License (Regular)\n3 pathways to a regular license",
+      "renewalPeriod": "Expires Dec. 31st of every even # year. Regardless of when issued.",
+      "duration": "2 year once they go through 1st renewal",
+      "licenseNumberFormat": "4 digit #: 8800",
+      "fields": [
+        {
+          "name": "applicationType",
+          "label": "Application Type",
+          "type": "hidden",
+          "value": "Vet License (Regular)\n3 pathways to a regular license"
+        },
+        {
+          "name": "firstName",
+          "label": "First Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "middleName",
+          "label": "Middle Name",
+          "type": "text",
+          "required": false,
+          "category": "Personal Information"
+        },
+        {
+          "name": "lastName",
+          "label": "Last Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "dateOfBirth",
+          "label": "Date of Birth",
+          "type": "date",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "ssn",
+          "label": "Social Security Number",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information",
+          "pii": true
+        },
+        {
+          "name": "email",
+          "label": "Email Address",
+          "type": "email",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "phone",
+          "label": "Primary Phone Number",
+          "type": "tel",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "mobilePhone",
+          "label": "Mobile Phone",
+          "type": "tel",
+          "required": false,
+          "category": "Contact Information"
+        },
+        {
+          "name": "address",
+          "label": "Street Address",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "address2",
+          "label": "Address Line 2",
+          "type": "text",
+          "required": false,
+          "category": "Address"
+        },
+        {
+          "name": "city",
+          "label": "City",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "state",
+          "label": "State",
+          "type": "select",
+          "required": true,
+          "category": "Address",
+          "options": [
+            "Arizona",
+            "Other"
+          ]
+        },
+        {
+          "name": "zipCode",
+          "label": "ZIP Code",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "vetSchool",
+          "label": "Veterinary School",
+          "type": "text",
+          "required": true,
+          "category": "Education"
+        },
+        {
+          "name": "graduationDate",
+          "label": "Graduation Date",
+          "type": "date",
+          "required": true,
+          "category": "Education"
+        },
+        {
+          "name": "degreeType",
+          "label": "Degree Type",
+          "type": "select",
+          "required": true,
+          "category": "Education",
+          "options": [
+            "DVM",
+            "VMD",
+            "Other"
+          ]
+        },
+        {
+          "name": "copy_of_government_issued_phot",
+          "label": "Copy of Government issued Photo ID",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "copy_of_legal_status_in_the_us",
+          "label": "Copy of Legal status in the US",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "letter_of_interest_resume_that",
+          "label": "Letter of interest/resume that explains experience",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "specific_page_that_needs_to_ge",
+          "label": "Specific Page that needs to get notarized. (Page 3?)",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "soon_to_be_grads:_diploma_and_",
+          "label": "Soon to be Grads: Diploma and unofficial transcript. (Fills out the form and submits before they get the diploma but will need to add that before they are officially licensed.)",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "declaration_1",
+          "label": "Have you ever been convicted of a crime?",
+          "type": "radio",
+          "required": true,
+          "category": "Declarations",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "name": "declaration_1_explanation",
+          "label": "Explanation (if Yes)",
+          "type": "textarea",
+          "required": false,
+          "category": "Declarations"
+        },
+        {
+          "name": "declaration_2",
+          "label": "Have you ever had disciplinary action taken against a professional license?",
+          "type": "radio",
+          "required": true,
+          "category": "Declarations",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "name": "declaration_2_explanation",
+          "label": "Explanation (if Yes)",
+          "type": "textarea",
+          "required": false,
+          "category": "Declarations"
+        },
+        {
+          "name": "declaration_3",
+          "label": "Are there any open complaints against you?",
+          "type": "radio",
+          "required": true,
+          "category": "Declarations",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "name": "declaration_3_explanation",
+          "label": "Explanation (if Yes)",
+          "type": "textarea",
+          "required": false,
+          "category": "Declarations"
+        },
+        {
+          "name": "attestation_1",
+          "label": "I certify that all information provided is true and accurate",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "attestation_2",
+          "label": "I understand that false statements may result in denial or revocation",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "attestation_3",
+          "label": "I agree to comply with all Arizona veterinary regulations",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "attestation_4",
+          "label": "I authorize verification of credentials and background checks",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "signature",
+          "label": "Electronic Signature (Type Full Name)",
+          "type": "text",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "signatureDate",
+          "label": "Signature Date",
+          "type": "date",
+          "required": true,
+          "category": "Attestations",
+          "defaultValue": "today"
+        }
+      ],
+      "statuses": [
+        {
+          "name": "Submitted",
+          "sendsEmail": true
+        },
+        {
+          "name": "Staff Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Incomplete",
+          "sendsEmail": true
+        },
+        {
+          "name": "2nd Staff Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Under Board Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Application Complete pending Exam",
+          "sendsEmail": true
+        },
+        {
+          "name": "Exam Complete (Invoice Due)",
+          "sendsEmail": true
+        },
+        {
+          "name": "Final Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Completed/Approved (Licensed Issued)",
+          "sendsEmail": true
+        }
+      ],
+      "fees": {
+        "flatFees": true,
+        "paymentPlans": [],
+        "waivers": [
+          "Military Spouse Waiver",
+          "Poverty Fee Waiver"
+        ],
+        "specialRules": [
+          "Endorsement and Specialty Licenses pay application and license fee together",
+          "Others can pay Application Fee upfront and License fee when approved"
+        ]
+      },
+      "workflow": {
+        "steps": [
+          "Submitted",
+          "Staff Review",
+          "Incomplete",
+          "2nd Staff Review",
+          "Under Board Review",
+          "Application Complete pending Exam",
+          "Exam Complete (Invoice Due)",
+          "Final Review",
+          "Completed/Approved (Licensed Issued)"
+        ],
+        "requiresExam": false,
+        "requiresBoardReview": false
+      }
+    },
+    {
+      "applicationType": "Vet Faculty",
+      "renewalPeriod": "Expires Dec. 31st of every even # year. Regardless of when issued. - If faculty leaves job for any reason this license auto terminates.\n\nMust provide verification that they are employed by a Vet college in Az. This verification can come from either the employer or employee. \n\nTranscript, all other items which apply to everyone else apply here. \n\n*Not required to take the State exam and not required to do CE\n\nLicense is null if they stop working at the College (good faith inform)",
+      "duration": "2 year once they go through 1st renewal",
+      "licenseNumberFormat": "2 numbering systems:\n9700X\nor F000X",
+      "fields": [
+        {
+          "name": "applicationType",
+          "label": "Application Type",
+          "type": "hidden",
+          "value": "Vet Faculty"
+        },
+        {
+          "name": "firstName",
+          "label": "First Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "middleName",
+          "label": "Middle Name",
+          "type": "text",
+          "required": false,
+          "category": "Personal Information"
+        },
+        {
+          "name": "lastName",
+          "label": "Last Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "dateOfBirth",
+          "label": "Date of Birth",
+          "type": "date",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "ssn",
+          "label": "Social Security Number",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information",
+          "pii": true
+        },
+        {
+          "name": "email",
+          "label": "Email Address",
+          "type": "email",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "phone",
+          "label": "Primary Phone Number",
+          "type": "tel",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "mobilePhone",
+          "label": "Mobile Phone",
+          "type": "tel",
+          "required": false,
+          "category": "Contact Information"
+        },
+        {
+          "name": "address",
+          "label": "Street Address",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "address2",
+          "label": "Address Line 2",
+          "type": "text",
+          "required": false,
+          "category": "Address"
+        },
+        {
+          "name": "city",
+          "label": "City",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "state",
+          "label": "State",
+          "type": "select",
+          "required": true,
+          "category": "Address",
+          "options": [
+            "Arizona",
+            "Other"
+          ]
+        },
+        {
+          "name": "zipCode",
+          "label": "ZIP Code",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "vetSchool",
+          "label": "Veterinary School",
+          "type": "text",
+          "required": true,
+          "category": "Education"
+        },
+        {
+          "name": "graduationDate",
+          "label": "Graduation Date",
+          "type": "date",
+          "required": true,
+          "category": "Education"
+        },
+        {
+          "name": "degreeType",
+          "label": "Degree Type",
+          "type": "select",
+          "required": true,
+          "category": "Education",
+          "options": [
+            "DVM",
+            "VMD",
+            "Other"
+          ]
+        },
+        {
+          "name": "employerName",
+          "label": "Veterinary College Employer",
+          "type": "text",
+          "required": true,
+          "category": "Employment"
+        },
+        {
+          "name": "employmentStartDate",
+          "label": "Employment Start Date",
+          "type": "date",
+          "required": true,
+          "category": "Employment"
+        },
+        {
+          "name": "copy_of_government_issued_phot",
+          "label": "Copy of Government issued Photo ID",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "copy_of_legal_status_in_the_us",
+          "label": "Copy of Legal status in the US",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "letter_of_interest_resume_that",
+          "label": "Letter of interest/resume that explains experience",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "specific_page_that_needs_to_ge",
+          "label": "Specific Page that needs to get notarized. (Page 3?)",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "soon_to_be_grads:_diploma_and_",
+          "label": "Soon to be Grads: Diploma and unofficial transcript. (Fills out the form and submits before they get the diploma but will need to add that before they are officially licensed.)",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "declaration_1",
+          "label": "Have you ever been convicted of a crime?",
+          "type": "radio",
+          "required": true,
+          "category": "Declarations",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "name": "declaration_1_explanation",
+          "label": "Explanation (if Yes)",
+          "type": "textarea",
+          "required": false,
+          "category": "Declarations"
+        },
+        {
+          "name": "declaration_2",
+          "label": "Have you ever had disciplinary action taken against a professional license?",
+          "type": "radio",
+          "required": true,
+          "category": "Declarations",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "name": "declaration_2_explanation",
+          "label": "Explanation (if Yes)",
+          "type": "textarea",
+          "required": false,
+          "category": "Declarations"
+        },
+        {
+          "name": "declaration_3",
+          "label": "Are there any open complaints against you?",
+          "type": "radio",
+          "required": true,
+          "category": "Declarations",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "name": "declaration_3_explanation",
+          "label": "Explanation (if Yes)",
+          "type": "textarea",
+          "required": false,
+          "category": "Declarations"
+        },
+        {
+          "name": "attestation_1",
+          "label": "I certify that all information provided is true and accurate",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "attestation_2",
+          "label": "I understand that false statements may result in denial or revocation",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "attestation_3",
+          "label": "I agree to comply with all Arizona veterinary regulations",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "attestation_4",
+          "label": "I authorize verification of credentials and background checks",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "signature",
+          "label": "Electronic Signature (Type Full Name)",
+          "type": "text",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "signatureDate",
+          "label": "Signature Date",
+          "type": "date",
+          "required": true,
+          "category": "Attestations",
+          "defaultValue": "today"
+        }
+      ],
+      "statuses": [
+        {
+          "name": "Submitted",
+          "sendsEmail": true
+        },
+        {
+          "name": "Staff Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Incomplete",
+          "sendsEmail": true
+        },
+        {
+          "name": "2nd Staff Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Under Board Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Application Complete pending Exam",
+          "sendsEmail": true
+        },
+        {
+          "name": "Exam Complete (Invoice Due)",
+          "sendsEmail": true
+        },
+        {
+          "name": "Final Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Completed/Approved (Licensed Issued)",
+          "sendsEmail": true
+        }
+      ],
+      "fees": {
+        "flatFees": true,
+        "paymentPlans": [],
+        "waivers": [
+          "Military Spouse Waiver",
+          "Poverty Fee Waiver"
+        ],
+        "specialRules": [
+          "Endorsement and Specialty Licenses pay application and license fee together",
+          "Others can pay Application Fee upfront and License fee when approved"
+        ]
+      },
+      "workflow": {
+        "steps": [
+          "Submitted",
+          "Staff Review",
+          "Incomplete",
+          "2nd Staff Review",
+          "Under Board Review",
+          "Application Complete pending Exam",
+          "Exam Complete (Invoice Due)",
+          "Final Review",
+          "Completed/Approved (Licensed Issued)"
+        ],
+        "requiresExam": false,
+        "requiresBoardReview": false
+      }
+    },
+    {
+      "applicationType": "Vet Specialty",
+      "renewalPeriod": "Expires Dec. 31st of every even # year. Regardless of when issued. \n\nOwn type of license (not a pathway) limits practice to scope of boarded specialty.\nThey do not have to pass National exam so no need to send scores. Must submit proof of current vet specialty in the form of a certificate and/or letter. They will need to upload this. \n\nThey submit all other items similar to everyone else.",
+      "duration": "2 year once they go through 1st renewal",
+      "licenseNumberFormat": "4 Digit #:\nStarted with 8000 and runs through 8099",
+      "fields": [
+        {
+          "name": "applicationType",
+          "label": "Application Type",
+          "type": "hidden",
+          "value": "Vet Specialty"
+        },
+        {
+          "name": "firstName",
+          "label": "First Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "middleName",
+          "label": "Middle Name",
+          "type": "text",
+          "required": false,
+          "category": "Personal Information"
+        },
+        {
+          "name": "lastName",
+          "label": "Last Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "dateOfBirth",
+          "label": "Date of Birth",
+          "type": "date",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "ssn",
+          "label": "Social Security Number",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information",
+          "pii": true
+        },
+        {
+          "name": "email",
+          "label": "Email Address",
+          "type": "email",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "phone",
+          "label": "Primary Phone Number",
+          "type": "tel",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "mobilePhone",
+          "label": "Mobile Phone",
+          "type": "tel",
+          "required": false,
+          "category": "Contact Information"
+        },
+        {
+          "name": "address",
+          "label": "Street Address",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "address2",
+          "label": "Address Line 2",
+          "type": "text",
+          "required": false,
+          "category": "Address"
+        },
+        {
+          "name": "city",
+          "label": "City",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "state",
+          "label": "State",
+          "type": "select",
+          "required": true,
+          "category": "Address",
+          "options": [
+            "Arizona",
+            "Other"
+          ]
+        },
+        {
+          "name": "zipCode",
+          "label": "ZIP Code",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "vetSchool",
+          "label": "Veterinary School",
+          "type": "text",
+          "required": true,
+          "category": "Education"
+        },
+        {
+          "name": "graduationDate",
+          "label": "Graduation Date",
+          "type": "date",
+          "required": true,
+          "category": "Education"
+        },
+        {
+          "name": "degreeType",
+          "label": "Degree Type",
+          "type": "select",
+          "required": true,
+          "category": "Education",
+          "options": [
+            "DVM",
+            "VMD",
+            "Other"
+          ]
+        },
+        {
+          "name": "specialtyType",
+          "label": "Specialty Board Certification",
+          "type": "text",
+          "required": true,
+          "category": "License Information"
+        },
+        {
+          "name": "boardName",
+          "label": "Certifying Board Name",
+          "type": "text",
+          "required": true,
+          "category": "License Information"
+        },
+        {
+          "name": "certificationDate",
+          "label": "Certification Date",
+          "type": "date",
+          "required": true,
+          "category": "License Information"
+        },
+        {
+          "name": "copy_of_government_issued_phot",
+          "label": "Copy of Government issued Photo ID",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "copy_of_legal_status_in_the_us",
+          "label": "Copy of Legal status in the US",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "letter_of_interest_resume_that",
+          "label": "Letter of interest/resume that explains experience",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "specific_page_that_needs_to_ge",
+          "label": "Specific Page that needs to get notarized. (Page 3?)",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "soon_to_be_grads:_diploma_and_",
+          "label": "Soon to be Grads: Diploma and unofficial transcript. (Fills out the form and submits before they get the diploma but will need to add that before they are officially licensed.)",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "declaration_1",
+          "label": "Have you ever been convicted of a crime?",
+          "type": "radio",
+          "required": true,
+          "category": "Declarations",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "name": "declaration_1_explanation",
+          "label": "Explanation (if Yes)",
+          "type": "textarea",
+          "required": false,
+          "category": "Declarations"
+        },
+        {
+          "name": "declaration_2",
+          "label": "Have you ever had disciplinary action taken against a professional license?",
+          "type": "radio",
+          "required": true,
+          "category": "Declarations",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "name": "declaration_2_explanation",
+          "label": "Explanation (if Yes)",
+          "type": "textarea",
+          "required": false,
+          "category": "Declarations"
+        },
+        {
+          "name": "declaration_3",
+          "label": "Are there any open complaints against you?",
+          "type": "radio",
+          "required": true,
+          "category": "Declarations",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "name": "declaration_3_explanation",
+          "label": "Explanation (if Yes)",
+          "type": "textarea",
+          "required": false,
+          "category": "Declarations"
+        },
+        {
+          "name": "attestation_1",
+          "label": "I certify that all information provided is true and accurate",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "attestation_2",
+          "label": "I understand that false statements may result in denial or revocation",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "attestation_3",
+          "label": "I agree to comply with all Arizona veterinary regulations",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "attestation_4",
+          "label": "I authorize verification of credentials and background checks",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "signature",
+          "label": "Electronic Signature (Type Full Name)",
+          "type": "text",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "signatureDate",
+          "label": "Signature Date",
+          "type": "date",
+          "required": true,
+          "category": "Attestations",
+          "defaultValue": "today"
+        }
+      ],
+      "statuses": [
+        {
+          "name": "Submitted",
+          "sendsEmail": true
+        },
+        {
+          "name": "Staff Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Incomplete",
+          "sendsEmail": true
+        },
+        {
+          "name": "2nd Staff Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Under Board Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Application Complete pending Exam",
+          "sendsEmail": true
+        },
+        {
+          "name": "Exam Complete (Invoice Due)",
+          "sendsEmail": true
+        },
+        {
+          "name": "Final Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Completed/Approved (Licensed Issued)",
+          "sendsEmail": true
+        }
+      ],
+      "fees": {
+        "flatFees": true,
+        "paymentPlans": [],
+        "waivers": [
+          "Military Spouse Waiver",
+          "Poverty Fee Waiver"
+        ],
+        "specialRules": [
+          "Endorsement and Specialty Licenses pay application and license fee together",
+          "Others can pay Application Fee upfront and License fee when approved"
+        ]
+      },
+      "workflow": {
+        "steps": [
+          "Submitted",
+          "Staff Review",
+          "Incomplete",
+          "2nd Staff Review",
+          "Under Board Review",
+          "Application Complete pending Exam",
+          "Exam Complete (Invoice Due)",
+          "Final Review",
+          "Completed/Approved (Licensed Issued)"
+        ],
+        "requiresExam": false,
+        "requiresBoardReview": false
+      }
+    },
+    {
+      "applicationType": "State Employee Vet (specifically for state of Arizona)",
+      "renewalPeriod": "Expires Dec. 31st of every even # year. Regardless of when issued. \n\nIf State employee leaves job for any reason this license auto terminates.\n\nGood faith inform",
+      "duration": "2 year once they go through 1st renewal",
+      "licenseNumberFormat": "4 Digit #: Started with 9900",
+      "fields": [
+        {
+          "name": "applicationType",
+          "label": "Application Type",
+          "type": "hidden",
+          "value": "State Employee Vet (specifically for state of Arizona)"
+        },
+        {
+          "name": "firstName",
+          "label": "First Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "middleName",
+          "label": "Middle Name",
+          "type": "text",
+          "required": false,
+          "category": "Personal Information"
+        },
+        {
+          "name": "lastName",
+          "label": "Last Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "dateOfBirth",
+          "label": "Date of Birth",
+          "type": "date",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "ssn",
+          "label": "Social Security Number",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information",
+          "pii": true
+        },
+        {
+          "name": "email",
+          "label": "Email Address",
+          "type": "email",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "phone",
+          "label": "Primary Phone Number",
+          "type": "tel",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "mobilePhone",
+          "label": "Mobile Phone",
+          "type": "tel",
+          "required": false,
+          "category": "Contact Information"
+        },
+        {
+          "name": "address",
+          "label": "Street Address",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "address2",
+          "label": "Address Line 2",
+          "type": "text",
+          "required": false,
+          "category": "Address"
+        },
+        {
+          "name": "city",
+          "label": "City",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "state",
+          "label": "State",
+          "type": "select",
+          "required": true,
+          "category": "Address",
+          "options": [
+            "Arizona",
+            "Other"
+          ]
+        },
+        {
+          "name": "zipCode",
+          "label": "ZIP Code",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "vetSchool",
+          "label": "Veterinary School",
+          "type": "text",
+          "required": true,
+          "category": "Education"
+        },
+        {
+          "name": "graduationDate",
+          "label": "Graduation Date",
+          "type": "date",
+          "required": true,
+          "category": "Education"
+        },
+        {
+          "name": "degreeType",
+          "label": "Degree Type",
+          "type": "select",
+          "required": true,
+          "category": "Education",
+          "options": [
+            "DVM",
+            "VMD",
+            "Other"
+          ]
+        },
+        {
+          "name": "copy_of_government_issued_phot",
+          "label": "Copy of Government issued Photo ID",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "copy_of_legal_status_in_the_us",
+          "label": "Copy of Legal status in the US",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "letter_of_interest_resume_that",
+          "label": "Letter of interest/resume that explains experience",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "specific_page_that_needs_to_ge",
+          "label": "Specific Page that needs to get notarized. (Page 3?)",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "soon_to_be_grads:_diploma_and_",
+          "label": "Soon to be Grads: Diploma and unofficial transcript. (Fills out the form and submits before they get the diploma but will need to add that before they are officially licensed.)",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "declaration_1",
+          "label": "Have you ever been convicted of a crime?",
+          "type": "radio",
+          "required": true,
+          "category": "Declarations",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "name": "declaration_1_explanation",
+          "label": "Explanation (if Yes)",
+          "type": "textarea",
+          "required": false,
+          "category": "Declarations"
+        },
+        {
+          "name": "declaration_2",
+          "label": "Have you ever had disciplinary action taken against a professional license?",
+          "type": "radio",
+          "required": true,
+          "category": "Declarations",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "name": "declaration_2_explanation",
+          "label": "Explanation (if Yes)",
+          "type": "textarea",
+          "required": false,
+          "category": "Declarations"
+        },
+        {
+          "name": "declaration_3",
+          "label": "Are there any open complaints against you?",
+          "type": "radio",
+          "required": true,
+          "category": "Declarations",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "name": "declaration_3_explanation",
+          "label": "Explanation (if Yes)",
+          "type": "textarea",
+          "required": false,
+          "category": "Declarations"
+        },
+        {
+          "name": "attestation_1",
+          "label": "I certify that all information provided is true and accurate",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "attestation_2",
+          "label": "I understand that false statements may result in denial or revocation",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "attestation_3",
+          "label": "I agree to comply with all Arizona veterinary regulations",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "attestation_4",
+          "label": "I authorize verification of credentials and background checks",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "signature",
+          "label": "Electronic Signature (Type Full Name)",
+          "type": "text",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "signatureDate",
+          "label": "Signature Date",
+          "type": "date",
+          "required": true,
+          "category": "Attestations",
+          "defaultValue": "today"
+        }
+      ],
+      "statuses": [
+        {
+          "name": "Submitted",
+          "sendsEmail": true
+        },
+        {
+          "name": "Staff Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Incomplete",
+          "sendsEmail": true
+        },
+        {
+          "name": "2nd Staff Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Under Board Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Application Complete pending Exam",
+          "sendsEmail": true
+        },
+        {
+          "name": "Exam Complete (Invoice Due)",
+          "sendsEmail": true
+        },
+        {
+          "name": "Final Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Completed/Approved (Licensed Issued)",
+          "sendsEmail": true
+        }
+      ],
+      "fees": {
+        "flatFees": true,
+        "paymentPlans": [],
+        "waivers": [
+          "Military Spouse Waiver",
+          "Poverty Fee Waiver"
+        ],
+        "specialRules": [
+          "Endorsement and Specialty Licenses pay application and license fee together",
+          "Others can pay Application Fee upfront and License fee when approved"
+        ]
+      },
+      "workflow": {
+        "steps": [
+          "Submitted",
+          "Staff Review",
+          "Incomplete",
+          "2nd Staff Review",
+          "Under Board Review",
+          "Application Complete pending Exam",
+          "Exam Complete (Invoice Due)",
+          "Final Review",
+          "Completed/Approved (Licensed Issued)"
+        ],
+        "requiresExam": false,
+        "requiresBoardReview": false
+      }
+    },
+    {
+      "applicationType": "Temp Vet License (Bridge of time to getting regular)",
+      "renewalPeriod": "30 Day license, cannot be extended, only used one time and is a separate application.\nTemporary application is not accepted unless the applicant also submits another type of vet license application. \nNo fee\nBoard staff must still verify licensure in another State in good standing. Govt. Issued ID, proof of legal entry into the Country.",
+      "duration": "",
+      "licenseNumberFormat": "Currently follows the Vet license numbering because it stays with them when they go live with regular license.",
+      "fields": [
+        {
+          "name": "applicationType",
+          "label": "Application Type",
+          "type": "hidden",
+          "value": "Temp Vet License (Bridge of time to getting regular)"
+        },
+        {
+          "name": "firstName",
+          "label": "First Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "middleName",
+          "label": "Middle Name",
+          "type": "text",
+          "required": false,
+          "category": "Personal Information"
+        },
+        {
+          "name": "lastName",
+          "label": "Last Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "dateOfBirth",
+          "label": "Date of Birth",
+          "type": "date",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "ssn",
+          "label": "Social Security Number",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information",
+          "pii": true
+        },
+        {
+          "name": "email",
+          "label": "Email Address",
+          "type": "email",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "phone",
+          "label": "Primary Phone Number",
+          "type": "tel",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "mobilePhone",
+          "label": "Mobile Phone",
+          "type": "tel",
+          "required": false,
+          "category": "Contact Information"
+        },
+        {
+          "name": "address",
+          "label": "Street Address",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "address2",
+          "label": "Address Line 2",
+          "type": "text",
+          "required": false,
+          "category": "Address"
+        },
+        {
+          "name": "city",
+          "label": "City",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "state",
+          "label": "State",
+          "type": "select",
+          "required": true,
+          "category": "Address",
+          "options": [
+            "Arizona",
+            "Other"
+          ]
+        },
+        {
+          "name": "zipCode",
+          "label": "ZIP Code",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "vetSchool",
+          "label": "Veterinary School",
+          "type": "text",
+          "required": true,
+          "category": "Education"
+        },
+        {
+          "name": "graduationDate",
+          "label": "Graduation Date",
+          "type": "date",
+          "required": true,
+          "category": "Education"
+        },
+        {
+          "name": "degreeType",
+          "label": "Degree Type",
+          "type": "select",
+          "required": true,
+          "category": "Education",
+          "options": [
+            "DVM",
+            "VMD",
+            "Other"
+          ]
+        },
+        {
+          "name": "copy_of_government_issued_phot",
+          "label": "Copy of Government issued Photo ID",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "copy_of_legal_status_in_the_us",
+          "label": "Copy of Legal status in the US",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "letter_of_interest_resume_that",
+          "label": "Letter of interest/resume that explains experience",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "specific_page_that_needs_to_ge",
+          "label": "Specific Page that needs to get notarized. (Page 3?)",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "soon_to_be_grads:_diploma_and_",
+          "label": "Soon to be Grads: Diploma and unofficial transcript. (Fills out the form and submits before they get the diploma but will need to add that before they are officially licensed.)",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "declaration_1",
+          "label": "Have you ever been convicted of a crime?",
+          "type": "radio",
+          "required": true,
+          "category": "Declarations",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "name": "declaration_1_explanation",
+          "label": "Explanation (if Yes)",
+          "type": "textarea",
+          "required": false,
+          "category": "Declarations"
+        },
+        {
+          "name": "declaration_2",
+          "label": "Have you ever had disciplinary action taken against a professional license?",
+          "type": "radio",
+          "required": true,
+          "category": "Declarations",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "name": "declaration_2_explanation",
+          "label": "Explanation (if Yes)",
+          "type": "textarea",
+          "required": false,
+          "category": "Declarations"
+        },
+        {
+          "name": "declaration_3",
+          "label": "Are there any open complaints against you?",
+          "type": "radio",
+          "required": true,
+          "category": "Declarations",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "name": "declaration_3_explanation",
+          "label": "Explanation (if Yes)",
+          "type": "textarea",
+          "required": false,
+          "category": "Declarations"
+        },
+        {
+          "name": "attestation_1",
+          "label": "I certify that all information provided is true and accurate",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "attestation_2",
+          "label": "I understand that false statements may result in denial or revocation",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "attestation_3",
+          "label": "I agree to comply with all Arizona veterinary regulations",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "attestation_4",
+          "label": "I authorize verification of credentials and background checks",
+          "type": "checkbox",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "signature",
+          "label": "Electronic Signature (Type Full Name)",
+          "type": "text",
+          "required": true,
+          "category": "Attestations"
+        },
+        {
+          "name": "signatureDate",
+          "label": "Signature Date",
+          "type": "date",
+          "required": true,
+          "category": "Attestations",
+          "defaultValue": "today"
+        }
+      ],
+      "statuses": [
+        {
+          "name": "Submitted",
+          "sendsEmail": true
+        },
+        {
+          "name": "Staff Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Incomplete",
+          "sendsEmail": true
+        },
+        {
+          "name": "2nd Staff Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Under Board Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Application Complete pending Exam",
+          "sendsEmail": true
+        },
+        {
+          "name": "Exam Complete (Invoice Due)",
+          "sendsEmail": true
+        },
+        {
+          "name": "Final Review",
+          "sendsEmail": true
+        },
+        {
+          "name": "Completed/Approved (Licensed Issued)",
+          "sendsEmail": true
+        }
+      ],
+      "fees": {
+        "flatFees": true,
+        "paymentPlans": [],
+        "waivers": [
+          "Military Spouse Waiver",
+          "Poverty Fee Waiver"
+        ],
+        "specialRules": [
+          "Endorsement and Specialty Licenses pay application and license fee together",
+          "Others can pay Application Fee upfront and License fee when approved"
+        ]
+      },
+      "workflow": {
+        "steps": [
+          "Submitted",
+          "Staff Review",
+          "Incomplete",
+          "2nd Staff Review",
+          "Under Board Review",
+          "Application Complete pending Exam",
+          "Exam Complete (Invoice Due)",
+          "Final Review",
+          "Completed/Approved (Licensed Issued)"
+        ],
+        "requiresExam": false,
+        "requiresBoardReview": false
+      }
+    }
+  ],
+  "globalSettings": {
+    "fees": {
+      "flatFees": true,
+      "paymentPlans": [],
+      "waivers": [
+        "Military Spouse Waiver",
+        "Poverty Fee Waiver"
+      ],
+      "specialRules": [
+        "Endorsement and Specialty Licenses pay application and license fee together",
+        "Others can pay Application Fee upfront and License fee when approved"
+      ]
+    },
+    "statuses": [
+      {
+        "name": "Submitted",
+        "sendsEmail": true
+      },
+      {
+        "name": "Staff Review",
+        "sendsEmail": true
+      },
+      {
+        "name": "Incomplete",
+        "sendsEmail": true
+      },
+      {
+        "name": "2nd Staff Review",
+        "sendsEmail": true
+      },
+      {
+        "name": "Under Board Review",
+        "sendsEmail": true
+      },
+      {
+        "name": "Application Complete pending Exam",
+        "sendsEmail": true
+      },
+      {
+        "name": "Exam Complete (Invoice Due)",
+        "sendsEmail": true
+      },
+      {
+        "name": "Final Review",
+        "sendsEmail": true
+      },
+      {
+        "name": "Completed/Approved (Licensed Issued)",
+        "sendsEmail": true
+      }
+    ],
+    "attestations": [
+      "I certify that all information provided is true and accurate",
+      "I understand that false statements may result in denial or revocation",
+      "I agree to comply with all Arizona veterinary regulations",
+      "I authorize verification of credentials and background checks"
+    ],
+    "declarations": [
+      {
+        "question": "Have you ever been convicted of a crime?",
+        "requiresExplanation": true,
+        "requiresDocuments": true
+      },
+      {
+        "question": "Have you ever had disciplinary action taken against a professional license?",
+        "requiresExplanation": true,
+        "requiresDocuments": true
+      },
+      {
+        "question": "Are there any open complaints against you?",
+        "requiresExplanation": true,
+        "requiresDocuments": true
+      }
+    ]
+  },
+  "metadata": {
+    "totalApplicationTypes": 9,
+    "documentSource": "ThentiaScopeRequirementForm-AZVet(2).docx",
+    "parserVersion": "v2.0 - Comprehensive"
+  }
+}

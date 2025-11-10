@@ -1,0 +1,489 @@
+{
+  "source": "Thentia Scope Document - AZ Veterinary Board (Manual Parser)",
+  "generatedAt": "2025-10-19",
+  "applicationTypes": [
+    {
+      "applicationType": "Vet License (Regular)\n3 pathways to a regular license",
+      "renewalPeriod": "Expires Dec. 31st of every even # year. Regardless of when issued.",
+      "duration": "2 year once they go through 1st renewal",
+      "fields": [
+        {
+          "name": "applicationType",
+          "label": "Application Type",
+          "type": "hidden",
+          "value": "Vet License (Regular)\n3 pathways to a regular license"
+        },
+        {
+          "name": "firstName",
+          "label": "First Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "lastName",
+          "label": "Last Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "email",
+          "label": "Email Address",
+          "type": "email",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "phone",
+          "label": "Phone Number",
+          "type": "tel",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "address",
+          "label": "Street Address",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "city",
+          "label": "City",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "state",
+          "label": "State",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "zipCode",
+          "label": "ZIP Code",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "photoId",
+          "label": "Government Issued Photo ID",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "legalStatus",
+          "label": "Proof of Legal Status in US",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "transcript",
+          "label": "Official Transcript",
+          "type": "file",
+          "required": false,
+          "category": "Documents"
+        }
+      ]
+    },
+    {
+      "applicationType": "Vet Faculty",
+      "renewalPeriod": "Expires Dec. 31st of every even # year. Regardless of when issued. - If faculty leaves job for any reason this license auto terminates.\n\nMust provide verification that they are employed by a Vet college in Az. This verification can come from either the employer or employee. \n\nTranscript, all other items which apply to everyone else apply here. \n\n*Not required to take the State exam and not required to do CE\n\nLicense is null if they stop working at the College (good faith inform)",
+      "duration": "2 year once they go through 1st renewal",
+      "fields": [
+        {
+          "name": "applicationType",
+          "label": "Application Type",
+          "type": "hidden",
+          "value": "Vet Faculty"
+        },
+        {
+          "name": "firstName",
+          "label": "First Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "lastName",
+          "label": "Last Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "email",
+          "label": "Email Address",
+          "type": "email",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "phone",
+          "label": "Phone Number",
+          "type": "tel",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "address",
+          "label": "Street Address",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "city",
+          "label": "City",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "state",
+          "label": "State",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "zipCode",
+          "label": "ZIP Code",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "photoId",
+          "label": "Government Issued Photo ID",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "legalStatus",
+          "label": "Proof of Legal Status in US",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "transcript",
+          "label": "Official Transcript",
+          "type": "file",
+          "required": false,
+          "category": "Documents"
+        },
+        {
+          "name": "employerName",
+          "label": "Veterinary College Employer",
+          "type": "text",
+          "required": true,
+          "category": "Employment"
+        },
+        {
+          "name": "employmentVerification",
+          "label": "Employment Verification Letter",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        }
+      ]
+    },
+    {
+      "applicationType": "Vet Specialty",
+      "renewalPeriod": "Expires Dec. 31st of every even # year. Regardless of when issued. \n\nOwn type of license (not a pathway) limits practice to scope of boarded specialty.\nThey do not have to pass National exam so no need to send scores. Must submit proof of current vet specialty in the form of a certificate and/or letter. They will need to upload this. \n\nThey submit all other items similar to everyone else.",
+      "duration": "2 year once they go through 1st renewal",
+      "fields": [
+        {
+          "name": "applicationType",
+          "label": "Application Type",
+          "type": "hidden",
+          "value": "Vet Specialty"
+        },
+        {
+          "name": "firstName",
+          "label": "First Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "lastName",
+          "label": "Last Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "email",
+          "label": "Email Address",
+          "type": "email",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "phone",
+          "label": "Phone Number",
+          "type": "tel",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "address",
+          "label": "Street Address",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "city",
+          "label": "City",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "state",
+          "label": "State",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "zipCode",
+          "label": "ZIP Code",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "photoId",
+          "label": "Government Issued Photo ID",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "legalStatus",
+          "label": "Proof of Legal Status in US",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "transcript",
+          "label": "Official Transcript",
+          "type": "file",
+          "required": false,
+          "category": "Documents"
+        },
+        {
+          "name": "specialtyType",
+          "label": "Specialty Board Certification",
+          "type": "text",
+          "required": true,
+          "category": "License Information"
+        },
+        {
+          "name": "specialtyCertificate",
+          "label": "Specialty Certificate",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        }
+      ]
+    },
+    {
+      "applicationType": "State Employee Vet (specifically for state of Arizona)",
+      "renewalPeriod": "Expires Dec. 31st of every even # year. Regardless of when issued. \n\nIf State employee leaves job for any reason this license auto terminates.\n\nGood faith inform",
+      "duration": "2 year once they go through 1st renewal",
+      "fields": [
+        {
+          "name": "applicationType",
+          "label": "Application Type",
+          "type": "hidden",
+          "value": "State Employee Vet (specifically for state of Arizona)"
+        },
+        {
+          "name": "firstName",
+          "label": "First Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "lastName",
+          "label": "Last Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "email",
+          "label": "Email Address",
+          "type": "email",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "phone",
+          "label": "Phone Number",
+          "type": "tel",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "address",
+          "label": "Street Address",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "city",
+          "label": "City",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "state",
+          "label": "State",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "zipCode",
+          "label": "ZIP Code",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "photoId",
+          "label": "Government Issued Photo ID",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "legalStatus",
+          "label": "Proof of Legal Status in US",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "transcript",
+          "label": "Official Transcript",
+          "type": "file",
+          "required": false,
+          "category": "Documents"
+        }
+      ]
+    },
+    {
+      "applicationType": "Temp Vet License (Bridge of time to getting regular)",
+      "renewalPeriod": "30 Day license, cannot be extended, only used one time and is a separate application.\nTemporary application is not accepted unless the applicant also submits another type of vet license application. \nNo fee\nBoard staff must still verify licensure in another State in good standing. Govt. Issued ID, proof of legal entry into the Country.",
+      "duration": "",
+      "fields": [
+        {
+          "name": "applicationType",
+          "label": "Application Type",
+          "type": "hidden",
+          "value": "Temp Vet License (Bridge of time to getting regular)"
+        },
+        {
+          "name": "firstName",
+          "label": "First Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "lastName",
+          "label": "Last Name",
+          "type": "text",
+          "required": true,
+          "category": "Personal Information"
+        },
+        {
+          "name": "email",
+          "label": "Email Address",
+          "type": "email",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "phone",
+          "label": "Phone Number",
+          "type": "tel",
+          "required": true,
+          "category": "Contact Information"
+        },
+        {
+          "name": "address",
+          "label": "Street Address",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "city",
+          "label": "City",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "state",
+          "label": "State",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "zipCode",
+          "label": "ZIP Code",
+          "type": "text",
+          "required": true,
+          "category": "Address"
+        },
+        {
+          "name": "photoId",
+          "label": "Government Issued Photo ID",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "legalStatus",
+          "label": "Proof of Legal Status in US",
+          "type": "file",
+          "required": true,
+          "category": "Documents"
+        },
+        {
+          "name": "transcript",
+          "label": "Official Transcript",
+          "type": "file",
+          "required": false,
+          "category": "Documents"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "totalApplicationTypes": 9,
+    "documentSource": "ThentiaScopeRequirementForm-AZVet(2).docx",
+    "parserVersion": "v1.0 - Manual"
+  }
+}

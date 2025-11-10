@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rules Engine Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .header {
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+            margin: 0 0 8px 0;
+        }
+        .subtitle {
+            color: #6b7280;
+            margin: 0;
+        }
+        .demo-section {
+            margin: 20px 0;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: #f9fafb;
+        }
+        .demo-title {
+            font-weight: 600;
+            margin: 0 0 12px 0;
+            color: #374151;
+        }
+        .button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 4px;
+            font-size: 14px;
+        }
+        .button:hover {
+            background: #2563eb;
+        }
+        .button.green {
+            background: #10b981;
+        }
+        .button.green:hover {
+            background: #059669;
+        }
+        .button.orange {
+            background: #f59e0b;
+        }
+        .button.orange:hover {
+            background: #d97706;
+        }
+        .code-block {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+        .result-box {
+            background: #ecfdf5;
+            border: 1px solid #10b981;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 8px 0;
+        }
+        .error-box {
+            background: #fef2f2;
+            border: 1px solid #ef4444;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 8px 0;
+            color: #dc2626;
+        }
+        .instructions {
+            background: #eff6ff;
+            border: 1px solid #3b82f6;
+            border-radius: 4px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+        .step {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        .step::before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #3b82f6;
+            color: white;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .steps {
+            counter-reset: step-counter;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🎯 Visual Rules Engine - Functional Demo</h1>
+            <p class="subtitle">Test the working backend rule engine that powers the visual interface</p>
+        </div>
+
+        <div class="instructions">
+            <h3 style="margin-top: 0;">How the Visual Rules Engine Works:</h3>
+            <div class="steps">
+                <div class="step">Drag <strong>Condition nodes</strong> (blue) to set "IF" statements</div>
+                <div class="step">Drag <strong>Action nodes</strong> (green) to set "THEN" actions</div>
+                <div class="step">Connect nodes by dragging from one to another</div>
+                <div class="step">Click nodes to edit their properties (field, operator, value, amount)</div>
+                <div class="step">Save rules to backend, test with sample data</div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3 class="demo-title">🧪 Test Backend Rule Engine</h3>
+            <p>These are the actual API calls that the visual interface uses:</p>
+            
+            <button class="button" onclick="getSampleRules()">Get Sample Rules</button>
+            <button class="button green" onclick="testProfessionalLicense()">Test: Professional License</button>
+            <button class="button orange" onclick="testLatePenalty()">Test: Late Penalty</button>
+            <button class="button" onclick="testMilitaryWaiver()">Test: Military Waiver</button>
+            
+            <div id="results"></div>
+        </div>
+
+        <div class="demo-section">
+            <h3 class="demo-title">📝 Sample Rule Structure</h3>
+            <p>This is how visual nodes get converted to backend rules:</p>
+            <div class="code-block">
+{
+  "rule_id": "professional_base_fee",
+  "name": "Base Fee - Professional License", 
+  "type": "fee",
+  "conditions": [
+    {"field": "licenseType", "operator": "=", "value": "professional"}
+  ],
+  "actions": [
+    {"type": "set_fee", "fee_name": "base_fee", "amount": 500}
+  ]
+}
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3 class="demo-title">🎨 Visual Interface Features</h3>
+            <ul>
+                <li><strong>Node Editor Modal:</strong> Click any node to edit properties</li>
+                <li><strong>Drag & Drop:</strong> Add new condition, fee, and penalty nodes</li>
+                <li><strong>Smart Connections:</strong> Drag between nodes to create rule flow</li>
+                <li><strong>Save/Load:</strong> Persist rules to backend by board ID</li>
+                <li><strong>Real-time Testing:</strong> Test rules against sample data instantly</li>
+                <li><strong>Clear Canvas:</strong> Start fresh or load existing rules</li>
+            </ul>
+        </div>
+
+        <div class="demo-section">
+            <h3 class="demo-title">🚀 Access Full Visual Interface</h3>
+            <p>To access the complete drag-and-drop visual rules builder:</p>
+            <ol>
+                <li>Go to: <a href="/?portal=admin" target="_blank">Admin Portal</a></li>
+                <li>Login with: <code>admin@regulatepro.com</code> / <code>admin123</code></li>
+                <li>Navigate to "Rules Engine" in the sidebar</li>
+                <li>Start building visual rules!</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://5000-iph2m5vold9ymnpblfqys-edd9f582.manusvm.computer/api';
+        
+        function showResult(title, data, isError = false) {
+            const resultsDiv = document.getElementById('results');
+            const className = isError ? 'error-box' : 'result-box';
+            resultsDiv.innerHTML = `
+                <div class="${className}">
+                    <strong>${title}</strong>
+                    <div class="code-block">${JSON.stringify(data, null, 2)}</div>
+                </div>
+            `;
+        }
+
+        async function getSampleRules() {
+            try {
+                const response = await fetch(`${API_BASE}/rules/sample`);
+                const data = await response.json();
+                showResult('✅ Sample Rules Loaded', data);
+            } catch (error) {
+                showResult('❌ Error Loading Sample Rules', { error: error.message }, true);
+            }
+        }
+
+        async function testProfessionalLicense() {
+            try {
+                const response = await fetch(`${API_BASE}/rules/evaluate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        application_data: {
+                            licenseType: 'professional',
+                            days_late: 0,
+                            military_spouse: 'false',
+                            board_id: 'default'
+                        },
+                        rule_type: 'all'
+                    })
+                });
+                const data = await response.json();
+                showResult('✅ Professional License Test', data);
+            } catch (error) {
+                showResult('❌ Test Failed', { error: error.message }, true);
+            }
+        }
+
+        async function testLatePenalty() {
+            try {
+                const response = await fetch(`${API_BASE}/rules/evaluate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        application_data: {
+                            licenseType: 'professional',
+                            days_late: 10,
+                            military_spouse: 'false',
+                            board_id: 'default'
+                        },
+                        rule_type: 'all'
+                    })
+                });
+                const data = await response.json();
+                showResult('✅ Late Penalty Test (10 days late)', data);
+            } catch (error) {
+                showResult('❌ Test Failed', { error: error.message }, true);
+            }
+        }
+
+        async function testMilitaryWaiver() {
+            try {
+                const response = await fetch(`${API_BASE}/rules/evaluate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        application_data: {
+                            licenseType: 'professional',
+                            days_late: 0,
+                            military_spouse: 'true',
+                            board_id: 'default'
+                        },
+                        rule_type: 'all'
+                    })
+                });
+                const data = await response.json();
+                showResult('✅ Military Spouse Waiver Test', data);
+            } catch (error) {
+                showResult('❌ Test Failed', { error: error.message }, true);
+            }
+        }
+    </script>
+</body>
+</html>

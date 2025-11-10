@@ -1,0 +1,23 @@
+[
+  {
+    "rule_id": "rule_1",
+    "name": "New Condition \u2192 New Penalty",
+    "type": "fee",
+    "conditions": [
+      {
+        "field": "days_late",
+        "operator": "=",
+        "value": "1"
+      }
+    ],
+    "actions": [
+      {
+        "type": "apply_penalty",
+        "penalty_type": "percentage",
+        "amount": 25,
+        "base_fee": "base_fee",
+        "description": "Click to edit this penalty"
+      }
+    ]
+  }
+]

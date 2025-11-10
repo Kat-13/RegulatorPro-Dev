@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parser Test Viewer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #2563eb;
+        }
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .entity-list {
+            display: grid;
+            gap: 10px;
+        }
+        .entity-item {
+            padding: 15px;
+            background: #f8fafc;
+            border-left: 4px solid #2563eb;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .entity-item:hover {
+            background: #e0f2fe;
+            transform: translateX(5px);
+        }
+        .entity-name {
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 5px;
+        }
+        .entity-details {
+            font-size: 14px;
+            color: #64748b;
+        }
+        .field-list {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .field-item {
+            padding: 15px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        .field-label {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 8px;
+        }
+        .field-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #64748b;
+        }
+        .field-meta span {
+            background: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .required {
+            color: #dc2626;
+            font-weight: 600;
+        }
+        .category-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        #loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .json-view {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Thentia Parser Test Viewer</h1>
+    
+    <div id="loading">
+        <div class="spinner"></div>
+        <div>Loading and parsing metadata...</div>
+    </div>
+
+    <div id="content" style="display: none;">
+        <div class="stats" id="stats"></div>
+        
+        <div class="section">
+            <h2>Available Entities</h2>
+            <div id="entities" class="entity-list"></div>
+        </div>
+
+        <div class="section">
+            <h2>Parsed Fields (Current Selection)</h2>
+            <div id="parsed-info"></div>
+            <div id="fields"></div>
+        </div>
+
+        <div class="section">
+            <h2>Raw JSON Structure</h2>
+            <div id="json-view" class="json-view"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import the parser
+        import { parseThentiaMetadata, groupFieldsByCategory } from '/src/utils/thentiaFieldParser.js';
+
+        let combinedData = null;
+        let currentEntity = null;
+
+        async function loadData() {
+            try {
+                const response = await fetch('/combined_thentia_data.json');
+                combinedData = await response.json();
+                
+                displayStats();
+                displayEntities();
+                displayRawJSON();
+                
+                // Parse with default (will use fallback)
+                const fields = parseThentiaMetadata(combinedData);
+                displayFields(fields, 'Default (Fallback Fields)');
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+            } catch (error) {
+                document.getElementById('loading').innerHTML = `
+                    <div style="color: #dc2626;">
+                        <h3>Error loading data</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayStats() {
+            const stats = document.getElementById('stats');
+            
+            let totalEntities = 0;
+            let totalAttributes = 0;
+            
+            for (const [sourceName, sourceData] of Object.entries(combinedData.metadata)) {
+                if (sourceData.data) {
+                    for (const entityWrapper of sourceData.data) {
+                        if (entityWrapper.view && entityWrapper.view.hits) {
+                            totalEntities += entityWrapper.view.hits.length;
+                            for (const entity of entityWrapper.view.hits) {
+                                totalAttributes += Object.keys(entity.attributes || {}).length;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            stats.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${Object.keys(combinedData.metadata).length}</div>
+                    <div class="stat-label">Metadata Sources</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalEntities}</div>
+                    <div class="stat-label">Total Entities</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalAttributes}</div>
+                    <div class="stat-label">Total Attributes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${Object.keys(combinedData.records || {}).length}</div>
+                    <div class="stat-label">Record Types</div>
+                </div>
+            `;
+        }
+
+        function displayEntities() {
+            const container = document.getElementById('entities');
+            const entities = [];
+            
+            for (const [sourceName, sourceData] of Object.entries(combinedData.metadata)) {
+                if (sourceData.data) {
+                    for (const entityWrapper of sourceData.data) {
+                        if (entityWrapper.view && entityWrapper.view.hits) {
+                            for (const entity of entityWrapper.view.hits) {
+                                entities.push({
+                                    name: entity.singularDisplay,
+                                    plural: entity.pluralDisplay,
+                                    entityName: entity.entity,
+                                    attributes: Object.keys(entity.attributes || {}).length,
+                                    source: sourceName,
+                                    data: entity
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            
+            container.innerHTML = entities.map(entity => `
+                <div class="entity-item" onclick="selectEntity('${entity.entityName}')">
+                    <div class="entity-name">${entity.name}</div>
+                    <div class="entity-details">
+                        ${entity.attributes} attributes • ${entity.entityName}
+                    </div>
+                </div>
+            `).join('');
+            
+            // Store entities globally for selection
+            window.entitiesData = entities;
+        }
+
+        window.selectEntity = function(entityName) {
+            const entity = window.entitiesData.find(e => e.entityName === entityName);
+            if (!entity) return;
+            
+            currentEntity = entity;
+            
+            // Try to parse this specific entity
+            const mockData = {
+                data: [{
+                    view: {
+                        hits: [entity.data]
+                    }
+                }]
+            };
+            
+            const fields = parseThentiaMetadata(mockData);
+            displayFields(fields, `${entity.name} (${entity.attributes} attributes)`);
+        };
+
+        function displayFields(fields, title) {
+            const info = document.getElementById('parsed-info');
+            const container = document.getElementById('fields');
+            
+            info.innerHTML = `
+                <div style="background: #dbeafe; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                    <strong>Parsing:</strong> ${title}<br>
+                    <strong>Fields Generated:</strong> ${fields.length}
+                </div>
+            `;
+            
+            const grouped = groupFieldsByCategory(fields);
+            
+            let html = '';
+            for (const [category, categoryFields] of Object.entries(grouped)) {
+                html += `<div class="category-header">${category}</div>`;
+                
+                for (const field of categoryFields) {
+                    html += `
+                        <div class="field-item">
+                            <div class="field-label">
+                                ${field.label}
+                                ${field.required ? '<span class="required">*</span>' : ''}
+                            </div>
+                            <div class="field-meta">
+                                <span><strong>Name:</strong> ${field.name}</span>
+                                <span><strong>Type:</strong> ${field.type}</span>
+                                ${field.category ? `<span><strong>Category:</strong> ${field.category}</span>` : ''}
+                                ${field.maxLength ? `<span><strong>Max Length:</strong> ${field.maxLength}</span>` : ''}
+                                ${field.connectedSpace ? `<span><strong>Lookup:</strong> ${field.connectedSpace}</span>` : ''}
+                            </div>
+                            ${field.description ? `<div style="margin-top: 8px; font-size: 13px; color: #64748b;">${field.description}</div>` : ''}
+                        </div>
+                    `;
+                }
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function displayRawJSON() {
+            const container = document.getElementById('json-view');
+            container.textContent = JSON.stringify(combinedData, null, 2);
+        }
+
+        // Load on page load
+        loadData();
+    </script>
+</body>
+</html>
+

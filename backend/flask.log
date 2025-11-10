@@ -1,0 +1,116 @@
+nohup: ignoring input
+✅ Multi-step wizard endpoints registered
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://169.254.0.21:5000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [09/Nov/2025 20:57:29] "GET /api/users/45/licenses HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 20:57:29] "GET /api/users/45/licenses HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 20:57:29] "GET /api/users/45/applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 20:57:29] "GET /api/users/45/applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 20:57:32] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 20:57:32] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 20:57:32] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 20:57:32] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 20:57:32] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 20:57:32] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 20:57:34] "POST /api/auth/login HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 20:57:37] "GET /api/form-templates HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 20:57:37] "GET /api/form-templates HTTP/1.1" 200 -
+/home/ubuntu/regulatory-platform/backend/app.py:207: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  ufl_field = FieldLibrary.query.get(field_ref['field_library_id'])
+127.0.0.1 - - [09/Nov/2025 20:57:37] "GET /api/application-types HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 20:57:37] "GET /api/application-types HTTP/1.1" 200 -
+/home/ubuntu/regulatory-platform/backend/app.py:2025: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  app_type = ApplicationType.query.get(type_id)
+127.0.0.1 - - [09/Nov/2025 20:58:02] "PUT /api/application-types/23 HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 20:58:47] "PUT /api/application-types/23 HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:02:21] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:02:21] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:02:21] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:02:21] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:02:21] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:02:21] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:02:36] "[35m[1mPOST /api/extract-pdf HTTP/1.1[0m" 201 -
+127.0.0.1 - - [09/Nov/2025 21:06:11] "POST /api/auth/login HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:06:13] "GET /api/form-templates HTTP/1.1" 200 -
+/home/ubuntu/regulatory-platform/backend/app.py:207: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  ufl_field = FieldLibrary.query.get(field_ref['field_library_id'])
+127.0.0.1 - - [09/Nov/2025 21:06:13] "GET /api/application-types HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:06:13] "GET /api/form-templates HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:06:13] "GET /api/application-types HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:37:12] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:37:12] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:37:12] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:37:12] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:37:12] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:37:12] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:37:21] "POST /api/auth/login HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:37:23] "GET /api/form-templates HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:37:23] "GET /api/application-types HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:37:23] "GET /api/form-templates HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:37:23] "GET /api/application-types HTTP/1.1" 200 -
+/home/ubuntu/regulatory-platform/backend/app.py:2025: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  app_type = ApplicationType.query.get(type_id)
+127.0.0.1 - - [09/Nov/2025 21:40:00] "PUT /api/application-types/24 HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:00] "GET /api/application-types HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:00] "GET /api/application-types HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:04] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:04] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:04] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:04] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:04] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:04] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:34] "POST /api/auth/login HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:34] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:34] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:35] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:35] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:35] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:35] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:36] "POST /api/auth/login HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:37] "GET /api/form-templates HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:37] "GET /api/application-types HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:37] "GET /api/form-templates HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:40:37] "GET /api/application-types HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:41:25] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:41:25] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:41:25] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:41:25] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:41:25] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:41:25] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:41:55] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:41:55] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:41:55] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:41:55] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:41:55] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:41:55] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:42:39] "POST /api/auth/login HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:42:41] "GET /api/form-templates HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:42:41] "GET /api/application-types HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:42:41] "GET /api/form-templates HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:42:41] "GET /api/application-types HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:42:52] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:42:52] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:42:52] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:42:52] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:42:52] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:42:52] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:43:05] "POST /api/auth/login HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:43:06] "GET /api/form-templates HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:43:06] "GET /api/application-types HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:43:06] "GET /api/form-templates HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:43:06] "GET /api/application-types HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:43:22] "PUT /api/application-types/24 HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:43:34] "PUT /api/application-types/24 HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:43:36] "GET /api/application-types HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:43:36] "GET /api/application-types HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:46:53] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:46:53] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:46:53] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:46:53] "GET /api/license-applications HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:46:53] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [09/Nov/2025 21:46:53] "GET /api/users HTTP/1.1" 200 -

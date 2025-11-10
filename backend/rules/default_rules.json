@@ -1,0 +1,128 @@
+[
+  {
+    "actions": [
+      {
+        "amount": 25,
+        "base_fee": "base_fee",
+        "description": "Click to edit this penalty",
+        "penalty_type": "percentage",
+        "type": "apply_penalty"
+      }
+    ],
+    "conditions": [
+      {
+        "field": "days_late",
+        "operator": "=",
+        "value": "1"
+      }
+    ],
+    "name": "New Condition \u2192 New Penalty \u2192 Penalty: 25%",
+    "rule_id": "rule_1",
+    "type": "fee"
+  },
+  {
+    "actions": [
+      {
+        "amount": 25,
+        "base_fee": "base_fee",
+        "description": "Click to edit this penalty",
+        "penalty_type": "percentage",
+        "type": "apply_penalty"
+      }
+    ],
+    "conditions": [
+      {
+        "field": "days_late",
+        "operator": "<",
+        "value": "1"
+      }
+    ],
+    "name": "Test",
+    "rule_id": "test_1760853070248_0",
+    "type": "fee"
+  },
+  {
+    "actions": [
+      {
+        "amount": 25,
+        "base_fee": "base_fee",
+        "description": "Click to edit this penalty",
+        "penalty_type": "percentage",
+        "type": "apply_penalty"
+      }
+    ],
+    "conditions": [
+      {
+        "field": "licenseType",
+        "operator": "=",
+        "value": "doctor"
+      }
+    ],
+    "name": "Bullshit",
+    "rule_id": "bullshit_1760854343256_0",
+    "type": "fee"
+  },
+  {
+    "actions": [
+      {
+        "amount": 25,
+        "base_fee": "base_fee",
+        "description": "Click to edit this penalty",
+        "penalty_type": "percentage",
+        "type": "apply_penalty"
+      }
+    ],
+    "conditions": [
+      {
+        "field": "days_late",
+        "operator": "=",
+        "value": "1"
+      }
+    ],
+    "name": "Debug Test Rule",
+    "rule_id": "debug_test_rule_1760856040792_0",
+    "type": "fee"
+  },
+  {
+    "actions": [
+      {
+        "amount": 50,
+        "base_fee": "base_fee",
+        "description": "Click to edit this penalty",
+        "penalty_type": "percentage",
+        "type": "apply_penalty"
+      }
+    ],
+    "conditions": [
+      {
+        "field": "days_late",
+        "operator": "<",
+        "value": "1"
+      }
+    ],
+    "name": "BS Test",
+    "rule_id": "bs_test_1760858467325_0",
+    "type": "fee"
+  },
+  {
+    "rule_id": "testinalpha_1760945064690_0",
+    "name": "TestinAlpha",
+    "type": "fee",
+    "conditions": [
+      {
+        "field": "days_late",
+        "operator": "<",
+        "value": "1"
+      }
+    ],
+    "actions": [
+      {
+        "type": "apply_penalty",
+        "penalty_type": "flat",
+        "amount": 50,
+        "base_fee": "base_fee",
+        "description": "Click to edit this penalty"
+      }
+    ]
+  }
+]
