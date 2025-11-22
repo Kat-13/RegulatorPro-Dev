@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, ChevronDown, ChevronUp, GripVertical, Info, AlertTriangle, AlertCircle } from 'lucide-react';
+import { X, Plus, Trash2, ChevronDown, ChevronUp, GripVertical } from 'lucide-react';
 
 const API_BASE_URL = '/api';
 
@@ -32,12 +32,6 @@ const FIELD_TYPES = [
   { value: 'file', label: 'File Upload' }
 ];
 
-const INSTRUCTION_STYLES = [
-  { value: 'info', label: 'Info', icon: Info, color: 'blue' },
-  { value: 'warning', label: 'Warning', icon: AlertTriangle, color: 'orange' },
-  { value: 'alert', label: 'Alert', icon: AlertCircle, color: 'red' }
-];
-
 function AIInterviewEditor({ interviewData: initialData, applicationType, onClose, onSave }) {
   const [interviewData, setInterviewData] = useState(null);
   const [expandedSections, setExpandedSections] = useState({});
@@ -50,32 +44,12 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
         id: applicationType?.id,
         name: initialData.interview_name || '',
         description: initialData.description || '',
-        sections: normalizeToElements(initialData.sections || [])
+        sections: initialData.sections || []
       });
     } else if (applicationType) {
       loadInterviewData();
     }
   }, [initialData, applicationType]);
-
-  // Normalize sections to use elements array (convert old questions format if needed)
-  const normalizeToElements = (sections) => {
-    return sections.map(section => {
-      if (section.elements) {
-        return section; // Already in new format
-      }
-      // Convert old questions format to new elements format
-      if (section.questions) {
-        return {
-          ...section,
-          elements: section.questions.map(q => ({
-            element_type: 'question',
-            ...q
-          }))
-        };
-      }
-      return { ...section, elements: [] };
-    });
-  };
 
   const loadInterviewData = () => {
     try {
@@ -89,7 +63,7 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
         id: applicationType.id,
         name: applicationType.name || '',
         description: applicationType.description || '',
-        sections: normalizeToElements(sections || [])
+        sections: sections || []
       });
 
       // Expand first section by default
@@ -144,32 +118,56 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
   };
 
   const deleteSection = (sectionIndex) => {
-    if (!confirm('Delete this entire section?')) return;
-    setInterviewData(prev => {
-      const newSections = prev.sections.filter((_, i) => i !== sectionIndex);
-      return { ...prev, sections: newSections };
-    });
+    if (!confirm('Are you sure you want to delete this section?')) return;
+    
+    setInterviewData(prev => ({
+      ...prev,
+      sections: prev.sections.filter((_, i) => i !== sectionIndex)
+    }));
     setHasChanges(true);
   };
 
-  const updateQuestionText = (sectionIndex, elementIndex, text) => {
+  const addSection = () => {
+    setInterviewData(prev => ({
+      ...prev,
+      sections: [
+        ...prev.sections,
+        {
+          title: 'New Section',
+          description: '',
+          questions: []
+        }
+      ]
+    }));
+    setHasChanges(true);
+  };
+
+  const updateQuestionText = (sectionIndex, questionIndex, text) => {
     setInterviewData(prev => {
       const newSections = [...prev.sections];
-      const element = newSections[sectionIndex].elements[elementIndex];
-      if ('question_text' in element) {
-        element.question_text = text;
+      const elements = newSections[sectionIndex].elements || newSections[sectionIndex].questions || [];
+      const question = elements[questionIndex];
+      // Handle both question_text and question field names
+      if ('question_text' in question) {
+        question.question_text = text;
       } else {
-        element.question = text;
+        question.question = text;
       }
       return { ...prev, sections: newSections };
     });
     setHasChanges(true);
   };
 
-  const deleteElement = (sectionIndex, elementIndex) => {
+  const deleteQuestion = (sectionIndex, questionIndex) => {
+    if (!confirm('Are you sure you want to delete this question?')) return;
+    
     setInterviewData(prev => {
       const newSections = [...prev.sections];
-      newSections[sectionIndex].elements = newSections[sectionIndex].elements.filter((_, i) => i !== elementIndex);
+      if (newSections[sectionIndex].elements) {
+        newSections[sectionIndex].elements = newSections[sectionIndex].elements.filter((_, i) => i !== questionIndex);
+      } else if (newSections[sectionIndex].questions) {
+        newSections[sectionIndex].questions = newSections[sectionIndex].questions.filter((_, i) => i !== questionIndex);
+      }
       return { ...prev, sections: newSections };
     });
     setHasChanges(true);
@@ -178,12 +176,21 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
   const addQuestion = (sectionIndex) => {
     setInterviewData(prev => {
       const newSections = [...prev.sections];
-      newSections[sectionIndex].elements.push({
+      const elements = newSections[sectionIndex].elements || newSections[sectionIndex].questions || [];
+      const newQuestion = {
         element_type: 'question',
         question_text: 'New Question',
-        question_type: 'fields',
         fields: []
-      });
+      };
+      
+      if (newSections[sectionIndex].elements) {
+        newSections[sectionIndex].elements.push(newQuestion);
+      } else {
+        if (!newSections[sectionIndex].questions) {
+          newSections[sectionIndex].questions = [];
+        }
+        newSections[sectionIndex].questions.push(newQuestion);
+      }
       return { ...prev, sections: newSections };
     });
     setHasChanges(true);
@@ -192,49 +199,79 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
   const addInstructionBlock = (sectionIndex) => {
     setInterviewData(prev => {
       const newSections = [...prev.sections];
-      newSections[sectionIndex].elements.push({
+      const newInstruction = {
         element_type: 'instruction_block',
-        title: 'Important Note',
-        content: 'Enter instruction text here...',
+        title: 'New Instruction',
+        content: 'Enter instruction content here...',
         style: 'info'
-      });
+      };
+      
+      if (newSections[sectionIndex].elements) {
+        newSections[sectionIndex].elements.push(newInstruction);
+      } else {
+        // Convert to elements array
+        newSections[sectionIndex].elements = [
+          ...(newSections[sectionIndex].questions || []).map(q => ({...q, element_type: 'question'})),
+          newInstruction
+        ];
+        delete newSections[sectionIndex].questions;
+      }
       return { ...prev, sections: newSections };
     });
     setHasChanges(true);
   };
 
-  const updateInstructionContent = (sectionIndex, elementIndex, content) => {
+  const updateElementTitle = (sectionIndex, elementIndex, title) => {
     setInterviewData(prev => {
       const newSections = [...prev.sections];
-      newSections[sectionIndex].elements[elementIndex].content = content;
+      const elements = newSections[sectionIndex].elements || newSections[sectionIndex].questions || [];
+      elements[elementIndex].title = title;
       return { ...prev, sections: newSections };
     });
     setHasChanges(true);
   };
 
-  const updateInstructionTitle = (sectionIndex, elementIndex, title) => {
+  const updateElementContent = (sectionIndex, elementIndex, content) => {
     setInterviewData(prev => {
       const newSections = [...prev.sections];
-      newSections[sectionIndex].elements[elementIndex].title = title;
+      const elements = newSections[sectionIndex].elements || newSections[sectionIndex].questions || [];
+      elements[elementIndex].content = content;
       return { ...prev, sections: newSections };
     });
     setHasChanges(true);
   };
 
-  const updateInstructionStyle = (sectionIndex, elementIndex, style) => {
+  const updateElementStyle = (sectionIndex, elementIndex, style) => {
     setInterviewData(prev => {
       const newSections = [...prev.sections];
-      newSections[sectionIndex].elements[elementIndex].style = style;
+      const elements = newSections[sectionIndex].elements || newSections[sectionIndex].questions || [];
+      elements[elementIndex].style = style;
       return { ...prev, sections: newSections };
     });
     setHasChanges(true);
   };
 
-  const updateFieldLabel = (sectionIndex, elementIndex, fieldIndex, label) => {
+  const deleteElement = (sectionIndex, elementIndex) => {
+    if (!confirm('Are you sure you want to delete this element?')) return;
+    
     setInterviewData(prev => {
       const newSections = [...prev.sections];
-      newSections[sectionIndex].elements[elementIndex].fields[fieldIndex] = {
-        ...newSections[sectionIndex].elements[elementIndex].fields[fieldIndex],
+      if (newSections[sectionIndex].elements) {
+        newSections[sectionIndex].elements = newSections[sectionIndex].elements.filter((_, i) => i !== elementIndex);
+      } else if (newSections[sectionIndex].questions) {
+        newSections[sectionIndex].questions = newSections[sectionIndex].questions.filter((_, i) => i !== elementIndex);
+      }
+      return { ...prev, sections: newSections };
+    });
+    setHasChanges(true);
+  };
+
+  const updateFieldLabel = (sectionIndex, questionIndex, fieldIndex, label) => {
+    setInterviewData(prev => {
+      const newSections = [...prev.sections];
+      const elements = newSections[sectionIndex].elements || newSections[sectionIndex].questions || [];
+      elements[questionIndex].fields[fieldIndex] = {
+        ...elements[questionIndex].fields[fieldIndex],
         label
       };
       return { ...prev, sections: newSections };
@@ -242,25 +279,28 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
     setHasChanges(true);
   };
 
-  const updateFieldType = (sectionIndex, elementIndex, fieldIndex, fieldType) => {
+  const updateFieldType = (sectionIndex, questionIndex, fieldIndex, type) => {
     setInterviewData(prev => {
       const newSections = [...prev.sections];
-      const field = newSections[sectionIndex].elements[elementIndex].fields[fieldIndex];
+      const elements = newSections[sectionIndex].elements || newSections[sectionIndex].questions || [];
+      const field = elements[questionIndex].fields[fieldIndex];
+      // Handle both field_type and type field names
       if ('field_type' in field) {
-        field.field_type = fieldType;
+        field.field_type = type;
       } else {
-        field.type = fieldType;
+        field.type = type;
       }
       return { ...prev, sections: newSections };
     });
     setHasChanges(true);
   };
 
-  const updateFieldRequired = (sectionIndex, elementIndex, fieldIndex, required) => {
+  const updateFieldRequired = (sectionIndex, questionIndex, fieldIndex, required) => {
     setInterviewData(prev => {
       const newSections = [...prev.sections];
-      newSections[sectionIndex].elements[elementIndex].fields[fieldIndex] = {
-        ...newSections[sectionIndex].elements[elementIndex].fields[fieldIndex],
+      const elements = newSections[sectionIndex].elements || newSections[sectionIndex].questions || [];
+      elements[questionIndex].fields[fieldIndex] = {
+        ...elements[questionIndex].fields[fieldIndex],
         required
       };
       return { ...prev, sections: newSections };
@@ -268,20 +308,22 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
     setHasChanges(true);
   };
 
-  const deleteField = (sectionIndex, elementIndex, fieldIndex) => {
+  const deleteField = (sectionIndex, questionIndex, fieldIndex) => {
     setInterviewData(prev => {
       const newSections = [...prev.sections];
-      newSections[sectionIndex].elements[elementIndex].fields = 
-        newSections[sectionIndex].elements[elementIndex].fields.filter((_, i) => i !== fieldIndex);
+      const elements = newSections[sectionIndex].elements || newSections[sectionIndex].questions || [];
+      elements[questionIndex].fields = 
+        elements[questionIndex].fields.filter((_, i) => i !== fieldIndex);
       return { ...prev, sections: newSections };
     });
     setHasChanges(true);
   };
 
-  const addField = (sectionIndex, elementIndex) => {
+  const addField = (sectionIndex, questionIndex) => {
     setInterviewData(prev => {
       const newSections = [...prev.sections];
-      newSections[sectionIndex].elements[elementIndex].fields.push({
+      const elements = newSections[sectionIndex].elements || newSections[sectionIndex].questions || [];
+      elements[questionIndex].fields.push({
         name: `field_${Date.now()}`,
         label: 'New Field',
         field_type: 'text',
@@ -293,35 +335,30 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
   };
 
   const handleSave = async () => {
+    setSaving(true);
     try {
-      setSaving(true);
-
-      const payload = {
-        name: interviewData.name,
-        description: interviewData.description,
-        sections: JSON.stringify(interviewData.sections)
-      };
-
       const response = await fetch(`${API_BASE_URL}/application-types/${interviewData.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: interviewData.name,
+          description: interviewData.description,
+          sections: JSON.stringify(interviewData.sections)
+        })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to save interview');
+      if (response.ok) {
+        setHasChanges(false);
+        alert('✓ Interview saved successfully! You can continue editing or close this window.');
+        // Don't call onSave here - that closes the modal
+        // User can close manually when done editing
+      } else {
+        const error = await response.json();
+        alert(`Failed to save: ${error.error || 'Unknown error'}`);
       }
-
-      setHasChanges(false);
-      if (onSave) {
-        onSave();
-      }
-      alert('Interview saved successfully!');
     } catch (error) {
-      console.error('Error saving interview:', error);
-      alert('Failed to save interview. Please try again.');
+      console.error('Save error:', error);
+      alert('Failed to save interview');
     } finally {
       setSaving(false);
     }
@@ -331,281 +368,279 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg p-8">
-          <p>Loading interview data...</p>
+          <div className="text-center">Loading...</div>
         </div>
       </div>
     );
   }
 
-  const totalQuestions = interviewData.sections.reduce((sum, section) => {
-    return sum + (section.elements || []).filter(e => e.element_type === 'question').length;
-  }, 0);
+  const totalQuestions = interviewData.sections.reduce((sum, section) => sum + section.questions.length, 0);
   const estimatedMinutes = Math.ceil(totalQuestions * 1.5);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700">
           <div className="flex-1">
             <input
               type="text"
               value={interviewData.name}
               onChange={(e) => updateInterviewName(e.target.value)}
-              className="text-2xl font-bold text-gray-900 border-none outline-none w-full bg-gray-50 px-3 py-2 rounded"
+              className="text-2xl font-bold text-white bg-transparent border-none outline-none w-full placeholder-blue-200"
               placeholder="Interview Name"
             />
             <textarea
               value={interviewData.description}
               onChange={(e) => updateInterviewDescription(e.target.value)}
-              className="mt-2 text-sm text-gray-600 border-none outline-none w-full bg-gray-50 px-3 py-2 rounded resize-none"
-              rows="2"
+              className="text-sm text-blue-100 bg-transparent border-none outline-none w-full mt-2 resize-none placeholder-blue-300"
               placeholder="Interview description..."
+              rows={2}
             />
           </div>
-          <button
-            onClick={onClose}
-            className="ml-4 text-gray-400 hover:text-gray-600"
-          >
+          <button onClick={onClose} className="ml-4 text-white hover:text-gray-200">
             <X className="w-6 h-6" />
           </button>
         </div>
 
         {/* Stats */}
-        <div className="px-6 py-3 bg-gray-50 border-b flex gap-6 text-sm">
-          <div>
-            <span className="font-semibold">{interviewData.sections.length}</span> sections
-          </div>
-          <div>
-            <span className="font-semibold">{totalQuestions}</span> questions
-          </div>
-          <div>
-            <span className="font-semibold">{estimatedMinutes}</span> min estimated
-          </div>
+        <div className="px-6 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-6 text-sm text-gray-600">
+          <span>{interviewData.sections.length} sections</span>
+          <span>{totalQuestions} questions</span>
+          <span>{estimatedMinutes} min estimated</span>
+          {hasChanges && <span className="text-orange-600 font-medium">● Unsaved changes</span>}
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          <div className="space-y-4">
-            {interviewData.sections.map((section, sectionIndex) => (
-              <div key={sectionIndex} className="border border-gray-300 rounded-lg overflow-hidden">
-                {/* Section Header */}
-                <div className="bg-gray-100 p-4">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => toggleSection(sectionIndex)}
-                      className="text-gray-600 hover:text-gray-800"
-                    >
-                      {expandedSections[sectionIndex] ? (
-                        <ChevronUp className="w-5 h-5" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5" />
-                      )}
-                    </button>
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={section.title || ''}
-                        onChange={(e) => updateSectionTitle(sectionIndex, e.target.value)}
-                        className="font-semibold text-gray-900 border-none outline-none bg-white px-3 py-1 rounded w-full"
-                        placeholder="Section title..."
-                      />
-                      <input
-                        type="text"
-                        value={section.description || ''}
-                        onChange={(e) => updateSectionDescription(sectionIndex, e.target.value)}
-                        className="mt-1 text-sm text-gray-600 border-none outline-none bg-white px-3 py-1 rounded w-full"
-                        placeholder="Section description..."
-                      />
-                    </div>
-                    <span className="text-sm text-gray-500">
-                      {(section.elements || []).filter(e => e.element_type === 'question').length} questions
-                    </span>
-                    <button
-                      onClick={() => deleteSection(sectionIndex)}
-                      className="text-red-600 hover:text-red-800"
-                      title="Delete section"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+          {interviewData.sections.map((section, sectionIndex) => (
+            <div key={sectionIndex} className="mb-6 border border-gray-200 rounded-lg overflow-hidden">
+              {/* Section Header */}
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-4 py-3 flex items-center justify-between">
+                <div className="flex-1 flex items-center gap-3">
+                  <button
+                    onClick={() => toggleSection(sectionIndex)}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    {expandedSections[sectionIndex] ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  </button>
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={section.title}
+                      onChange={(e) => updateSectionTitle(sectionIndex, e.target.value)}
+                      className="font-semibold text-gray-900 bg-transparent border-none outline-none w-full"
+                      placeholder="Section Title"
+                    />
+                    <input
+                      type="text"
+                      value={section.description || ''}
+                      onChange={(e) => updateSectionDescription(sectionIndex, e.target.value)}
+                      className="text-sm text-gray-600 bg-transparent border-none outline-none w-full mt-1"
+                      placeholder="Section description..."
+                    />
                   </div>
+                  <span className="text-sm text-gray-500">{(section.elements || section.questions || []).length} items</span>
                 </div>
+                <button
+                  onClick={() => deleteSection(sectionIndex)}
+                  className="ml-4 text-red-600 hover:text-red-800"
+                  title="Delete section"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
 
-                {/* Elements */}
-                {expandedSections[sectionIndex] && (
-                  <div className="p-4 space-y-4">
-                    {(section.elements || []).map((element, elementIndex) => {
-                      // Render instruction block
-                      if (element.element_type === 'instruction_block') {
-                        const styleConfig = INSTRUCTION_STYLES.find(s => s.value === element.style) || INSTRUCTION_STYLES[0];
-                        const styleClasses = {
-                          info: 'bg-blue-50 border-blue-300 text-blue-900',
-                          warning: 'bg-orange-50 border-orange-300 text-orange-900',
-                          alert: 'bg-red-50 border-red-300 text-red-900'
-                        };
-                        
-                        return (
-                          <div key={elementIndex} className={`border-l-4 rounded p-4 ${styleClasses[element.style] || styleClasses.info}`}>
-                            <div className="flex items-start gap-3 mb-2">
-                              <select
-                                value={element.style || 'info'}
-                                onChange={(e) => updateInstructionStyle(sectionIndex, elementIndex, e.target.value)}
-                                className="px-2 py-1 border border-gray-300 rounded text-sm bg-white"
-                              >
-                                {INSTRUCTION_STYLES.map(s => (
-                                  <option key={s.value} value={s.value}>{s.label}</option>
-                                ))}
-                              </select>
-                              <input
-                                type="text"
-                                value={element.title || ''}
-                                onChange={(e) => updateInstructionTitle(sectionIndex, elementIndex, e.target.value)}
-                                className="flex-1 font-semibold border-none outline-none bg-white px-3 py-1 rounded"
-                                placeholder="Instruction title (optional)..."
-                              />
-                              <button
-                                onClick={() => deleteElement(sectionIndex, elementIndex)}
-                                className="text-red-600 hover:text-red-800"
-                                title="Delete instruction"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                            <textarea
-                              value={element.content || ''}
-                              onChange={(e) => updateInstructionContent(sectionIndex, elementIndex, e.target.value)}
-                              className="w-full text-sm border-none outline-none bg-white px-3 py-2 rounded resize-none"
-                              rows="3"
-                              placeholder="Instruction content..."
-                            />
-                          </div>
-                        );
-                      }
-
-                      // Render question
-                      const questionText = element.question_text || element.question || '';
+              {/* Questions and Instruction Blocks */}
+              {expandedSections[sectionIndex] && (
+                <div className="p-4 space-y-4">
+                  {(section.elements || section.questions || []).map((element, elementIndex) => {
+                    const isInstructionBlock = element.element_type === 'instruction_block';
+                    
+                    if (isInstructionBlock) {
                       return (
-                        <div key={elementIndex} className="bg-white border border-gray-200 rounded-lg p-4">
-                          {/* Question Header */}
+                        <div key={elementIndex} className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
                           <div className="flex items-start gap-3 mb-3">
-                            <span className="text-sm font-semibold text-gray-500 mt-2">
-                              Q{(section.elements || []).slice(0, elementIndex).filter(e => e.element_type === 'question').length + 1}
-                            </span>
+                            <span className="text-sm font-semibold text-blue-600 mt-2">INFO</span>
                             <input
                               type="text"
-                              value={questionText}
-                              onChange={(e) => updateQuestionText(sectionIndex, elementIndex, e.target.value)}
-                              className="flex-1 text-gray-900 font-medium border-none outline-none bg-gray-50 px-3 py-2 rounded"
-                              placeholder="Question text..."
+                              value={element.title || ''}
+                              onChange={(e) => updateElementTitle(sectionIndex, elementIndex, e.target.value)}
+                              className="flex-1 text-blue-900 font-medium border-none outline-none bg-blue-100 px-3 py-2 rounded"
+                              placeholder="Instruction title..."
                             />
                             <button
                               onClick={() => deleteElement(sectionIndex, elementIndex)}
                               className="text-red-600 hover:text-red-800 mt-2"
-                              title="Delete question"
+                              title="Delete instruction block"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
-
-                          {/* Fields */}
-                          <div className="ml-8 space-y-2">
-                            <div className="text-xs font-semibold text-gray-500 uppercase mb-2">Fields to Collect:</div>
-                            {element.fields && element.fields.map((field, fieldIndex) => {
-                              const fieldType = field.field_type || field.type || 'text';
-                              return (
-                                <div key={fieldIndex} className="flex items-center gap-2 bg-gray-50 p-2 rounded">
-                                  <GripVertical className="w-4 h-4 text-gray-400" />
-                                  <input
-                                    type="text"
-                                    value={field.label || toReadableLabel(field.name)}
-                                    onChange={(e) => updateFieldLabel(sectionIndex, elementIndex, fieldIndex, e.target.value)}
-                                    className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                                    placeholder="Field label"
-                                  />
-                                  <select
-                                    value={fieldType}
-                                    onChange={(e) => updateFieldType(sectionIndex, elementIndex, fieldIndex, e.target.value)}
-                                    className="px-2 py-1 border border-gray-300 rounded text-sm"
-                                  >
-                                    {FIELD_TYPES.map(ft => (
-                                      <option key={ft.value} value={ft.value}>{ft.label}</option>
-                                    ))}
-                                  </select>
-                                  <label className="flex items-center gap-1 text-sm">
-                                    <input
-                                      type="checkbox"
-                                      checked={field.required || false}
-                                      onChange={(e) => updateFieldRequired(sectionIndex, elementIndex, fieldIndex, e.target.checked)}
-                                      className="rounded border-gray-300"
-                                    />
-                                    <span className="text-gray-600">Required</span>
-                                  </label>
-                                  <button
-                                    onClick={() => deleteField(sectionIndex, elementIndex, fieldIndex)}
-                                    className="text-red-600 hover:text-red-800"
-                                    title="Delete field"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              );
-                            })}
-                            <button
-                              onClick={() => addField(sectionIndex, elementIndex)}
-                              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 mt-2"
-                            >
-                              <Plus className="w-4 h-4" />
-                              Add Field
-                            </button>
+                          <div className="ml-8">
+                            <textarea
+                              value={element.content || ''}
+                              onChange={(e) => updateElementContent(sectionIndex, elementIndex, e.target.value)}
+                              className="w-full text-gray-700 border border-blue-300 outline-none bg-white px-3 py-2 rounded min-h-[80px]"
+                              placeholder="Instruction content..."
+                              rows={4}
+                            />
+                            <div className="mt-2">
+                              <label className="text-xs font-semibold text-gray-600 uppercase">Style:</label>
+                              <select
+                                value={element.style || 'info'}
+                                onChange={(e) => updateElementStyle(sectionIndex, elementIndex, e.target.value)}
+                                className="ml-2 px-2 py-1 border border-blue-300 rounded text-sm"
+                              >
+                                <option value="info">Info (Blue)</option>
+                                <option value="warning">Warning (Red)</option>
+                              </select>
+                            </div>
                           </div>
                         </div>
                       );
-                    })}
+                    }
                     
-                    {/* Add Element Buttons */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => addQuestion(sectionIndex)}
-                        className="flex-1 flex items-center justify-center gap-2 text-blue-600 hover:text-blue-800 px-4 py-2 border border-blue-300 rounded-lg hover:bg-blue-50"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Add Question
-                      </button>
-                      <button
-                        onClick={() => addInstructionBlock(sectionIndex)}
-                        className="flex-1 flex items-center justify-center gap-2 text-green-600 hover:text-green-800 px-4 py-2 border border-green-300 rounded-lg hover:bg-green-50"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Add Instruction Block
-                      </button>
-                    </div>
+                    // Render question
+                    const question = element;
+                    const questionIndex = elementIndex;
+                    const questionText = question.question_text || question.question || '';
+                    return (
+                      <div key={questionIndex} className="bg-white border border-gray-200 rounded-lg p-4">
+                        {/* Question Header */}
+                        <div className="flex items-start gap-3 mb-3">
+                          <span className="text-sm font-semibold text-gray-500 mt-2">Q{questionIndex + 1}</span>
+                          <input
+                            type="text"
+                            value={questionText}
+                            onChange={(e) => updateQuestionText(sectionIndex, questionIndex, e.target.value)}
+                            className="flex-1 text-gray-900 font-medium border-none outline-none bg-gray-50 px-3 py-2 rounded"
+                            placeholder="Question text..."
+                          />
+                          <button
+                            onClick={() => deleteQuestion(sectionIndex, questionIndex)}
+                            className="text-red-600 hover:text-red-800 mt-2"
+                            title="Delete question"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Fields */}
+                        <div className="ml-8 space-y-2">
+                          <div className="text-xs font-semibold text-gray-500 uppercase mb-2">Fields to Collect:</div>
+                          {question.fields && question.fields.map((field, fieldIndex) => {
+                            const fieldType = field.field_type || field.type || 'text';
+                            return (
+                              <div key={fieldIndex} className="flex items-center gap-2 bg-gray-50 p-2 rounded">
+                                <GripVertical className="w-4 h-4 text-gray-400" />
+                                <input
+                                  type="text"
+                                  value={field.label || toReadableLabel(field.name)}
+                                  onChange={(e) => updateFieldLabel(sectionIndex, questionIndex, fieldIndex, e.target.value)}
+                                  className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                                  placeholder="Field label"
+                                />
+                                <select
+                                  value={fieldType}
+                                  onChange={(e) => updateFieldType(sectionIndex, questionIndex, fieldIndex, e.target.value)}
+                                  className="px-2 py-1 border border-gray-300 rounded text-sm"
+                                >
+                                  {FIELD_TYPES.map(ft => (
+                                    <option key={ft.value} value={ft.value}>{ft.label}</option>
+                                  ))}
+                                </select>
+                                <label className="flex items-center gap-1 text-sm">
+                                  <input
+                                    type="checkbox"
+                                    checked={field.required || false}
+                                    onChange={(e) => updateFieldRequired(sectionIndex, questionIndex, fieldIndex, e.target.checked)}
+                                    className="rounded border-gray-300"
+                                  />
+                                  <span className="text-gray-600">Required</span>
+                                </label>
+                                <button
+                                  onClick={() => deleteField(sectionIndex, questionIndex, fieldIndex)}
+                                  className="text-red-600 hover:text-red-800"
+                                  title="Delete field"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            );
+                          })}
+                          <button
+                            onClick={() => addField(sectionIndex, questionIndex)}
+                            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 mt-2"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Add Field
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => addQuestion(sectionIndex)}
+                      className="flex-1 flex items-center gap-2 text-blue-600 hover:text-blue-800 px-4 py-2 border border-blue-300 rounded-lg hover:bg-blue-50 justify-center"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Question
+                    </button>
+                    <button
+                      onClick={() => addInstructionBlock(sectionIndex)}
+                      className="flex-1 flex items-center gap-2 text-blue-600 hover:text-blue-800 px-4 py-2 border border-blue-300 rounded-lg hover:bg-blue-50 justify-center"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Instruction Block
+                    </button>
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
+                  <button
+                    onClick={() => addQuestion(sectionIndex)}
+                    style={{display: 'none'}}
+                    className="flex items-center gap-2 text-blue-600 hover:text-blue-800 px-4 py-2 border border-blue-300 rounded-lg hover:bg-blue-50 w-full justify-center"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Question
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+
+          <button
+            onClick={addSection}
+            className="flex items-center gap-2 text-blue-600 hover:text-blue-800 px-4 py-3 border-2 border-dashed border-blue-300 rounded-lg hover:bg-blue-50 w-full justify-center font-medium"
+          >
+            <Plus className="w-5 h-5" />
+            Add Section
+          </button>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t bg-gray-50">
-          <div className="text-sm text-gray-600">
-            {hasChanges && 'Unsaved changes'}
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 hover:text-gray-900"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving || !hasChanges}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? 'Saving...' : 'Save Interview'}
-            </button>
-          </div>
+        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3 bg-gray-50">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-700 hover:text-gray-900"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving || !interviewData?.sections?.length}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {saving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Interview'
+            )}
+          </button>
         </div>
       </div>
     </div>
