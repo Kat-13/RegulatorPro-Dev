@@ -515,15 +515,23 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
           {interviewData.sections.map((section, sectionIndex) => (
             <div 
               key={sectionIndex} 
-              className="mb-6 border border-gray-200 rounded-lg overflow-hidden cursor-move"
-              draggable
-              onDragStart={() => handleSectionDragStart(sectionIndex)}
+              className="mb-6 border border-gray-200 rounded-lg overflow-hidden"
               onDragOver={handleSectionDragOver}
               onDrop={() => handleSectionDrop(sectionIndex)}
             >
               {/* Section Header */}
               <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-4 py-3 flex items-center justify-between">
                 <div className="flex-1 flex items-center gap-3">
+                  <div 
+                    className="cursor-move text-gray-400 hover:text-gray-600"
+                    draggable
+                    onDragStart={(e) => {
+                      e.stopPropagation();
+                      handleSectionDragStart(sectionIndex);
+                    }}
+                  >
+                    <GripVertical className="w-5 h-5" />
+                  </div>
                   <button
                     onClick={() => toggleSection(sectionIndex)}
                     className="text-blue-600 hover:text-blue-800"
@@ -569,7 +577,10 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
                           key={elementIndex} 
                           className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 cursor-move"
                           draggable
-                          onDragStart={() => handleDragStart(sectionIndex, elementIndex)}
+                          onDragStart={(e) => {
+                            e.stopPropagation();
+                            handleDragStart(sectionIndex, elementIndex);
+                          }}
                           onDragOver={handleDragOver}
                           onDrop={() => handleDrop(sectionIndex, elementIndex)}
                         >
@@ -623,7 +634,10 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
                         key={questionIndex} 
                         className="bg-white border border-gray-200 rounded-lg p-4 cursor-move"
                         draggable
-                        onDragStart={() => handleDragStart(sectionIndex, questionIndex)}
+                        onDragStart={(e) => {
+                          e.stopPropagation();
+                          handleDragStart(sectionIndex, questionIndex);
+                        }}
                         onDragOver={handleDragOver}
                         onDrop={() => handleDrop(sectionIndex, questionIndex)}
                       >
