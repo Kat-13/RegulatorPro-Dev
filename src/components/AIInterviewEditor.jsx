@@ -601,14 +601,6 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
                       Add Instruction Block
                     </button>
                   </div>
-                  <button
-                    onClick={() => addQuestion(sectionIndex)}
-                    style={{display: 'none'}}
-                    className="flex items-center gap-2 text-blue-600 hover:text-blue-800 px-4 py-2 border border-blue-300 rounded-lg hover:bg-blue-50 w-full justify-center"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Question
-                  </button>
                 </div>
               )}
             </div>
