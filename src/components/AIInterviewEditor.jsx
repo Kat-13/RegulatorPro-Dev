@@ -309,6 +309,40 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
     setHasChanges(true);
   };
 
+  const addFieldOption = (sectionIndex, questionIndex, fieldIndex) => {
+    setInterviewData(prev => {
+      const newSections = [...prev.sections];
+      const elements = newSections[sectionIndex].elements || newSections[sectionIndex].questions || [];
+      const field = elements[questionIndex].fields[fieldIndex];
+      field.options = field.options || [];
+      field.options.push('');
+      return { ...prev, sections: newSections };
+    });
+    setHasChanges(true);
+  };
+
+  const updateFieldOption = (sectionIndex, questionIndex, fieldIndex, optionIndex, value) => {
+    setInterviewData(prev => {
+      const newSections = [...prev.sections];
+      const elements = newSections[sectionIndex].elements || newSections[sectionIndex].questions || [];
+      const field = elements[questionIndex].fields[fieldIndex];
+      field.options[optionIndex] = value;
+      return { ...prev, sections: newSections };
+    });
+    setHasChanges(true);
+  };
+
+  const deleteFieldOption = (sectionIndex, questionIndex, fieldIndex, optionIndex) => {
+    setInterviewData(prev => {
+      const newSections = [...prev.sections];
+      const elements = newSections[sectionIndex].elements || newSections[sectionIndex].questions || [];
+      const field = elements[questionIndex].fields[fieldIndex];
+      field.options = field.options.filter((_, i) => i !== optionIndex);
+      return { ...prev, sections: newSections };
+    });
+    setHasChanges(true);
+  };
+
   const deleteField = (sectionIndex, questionIndex, fieldIndex) => {
     setInterviewData(prev => {
       const newSections = [...prev.sections];
@@ -581,8 +615,10 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
                           <div className="text-xs font-semibold text-gray-500 uppercase mb-2">Fields to Collect:</div>
                           {question.fields && question.fields.map((field, fieldIndex) => {
                             const fieldType = field.field_type || field.type || 'text';
+                            const needsOptions = ['dropdown', 'radio', 'checkbox'].includes(fieldType);
                             return (
-                              <div key={fieldIndex} className="flex items-center gap-2 bg-gray-50 p-2 rounded">
+                              <div key={fieldIndex} className="bg-gray-50 p-2 rounded space-y-2">
+                              <div className="flex items-center gap-2">
                                 <GripVertical className="w-4 h-4 text-gray-400" />
                                 <input
                                   type="text"
@@ -616,6 +652,39 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
+                              </div>
+                              
+                              {/* Options configuration for dropdown/radio/checkbox */}
+                              {needsOptions && (
+                                <div className="ml-6 pl-4 border-l-2 border-gray-300 space-y-2">
+                                  <div className="text-xs font-semibold text-gray-600">Options:</div>
+                                  {(field.options || []).map((option, optIndex) => (
+                                    <div key={optIndex} className="flex items-center gap-2">
+                                      <input
+                                        type="text"
+                                        value={option}
+                                        onChange={(e) => updateFieldOption(sectionIndex, questionIndex, fieldIndex, optIndex, e.target.value)}
+                                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                                        placeholder={`Option ${optIndex + 1}`}
+                                      />
+                                      <button
+                                        onClick={() => deleteFieldOption(sectionIndex, questionIndex, fieldIndex, optIndex)}
+                                        className="text-red-600 hover:text-red-800"
+                                        title="Delete option"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                  <button
+                                    onClick={() => addFieldOption(sectionIndex, questionIndex, fieldIndex)}
+                                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                    Add Option
+                                  </button>
+                                </div>
+                              )}
                               </div>
                             );
                           })}
