@@ -374,7 +374,11 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
     );
   }
 
-  const totalQuestions = interviewData.sections.reduce((sum, section) => sum + section.questions.length, 0);
+  const totalQuestions = (interviewData.sections || []).reduce((sum, section) => {
+    const elements = section.elements || section.questions || [];
+    const questionCount = elements.filter(el => !el.element_type || el.element_type === 'question').length;
+    return sum + questionCount;
+  }, 0);
   const estimatedMinutes = Math.ceil(totalQuestions * 1.5);
 
   return (
