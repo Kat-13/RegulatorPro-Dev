@@ -540,10 +540,10 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
                                 <GripVertical className="w-4 h-4 text-gray-400" />
                                 <input
                                   type="text"
-                                  value={field.label || toReadableLabel(field.name)}
+                                  value={field.label || ''}
                                   onChange={(e) => updateFieldLabel(sectionIndex, questionIndex, fieldIndex, e.target.value)}
                                   className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                                  placeholder="Field label"
+                                  placeholder={toReadableLabel(field.name) || 'Field label'}
                                 />
                                 <select
                                   value={fieldType}
