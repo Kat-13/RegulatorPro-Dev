@@ -104,24 +104,52 @@ const LicenseePortal = ({ user, onBack }) => {
             sectionIndex: sectionIndex
           });
           
-          // Add all questions and their fields
-          (section.questions || []).forEach((question, questionIndex) => {
+          // Handle both new elements format and old questions format
+          const elements = section.elements || section.questions || [];
+          
+          elements.forEach((element, elementIndex) => {
+            // Handle instruction blocks (new format)
+            if (element.element_type === 'instruction_block') {
+              fieldsToRender.push({
+                type: 'instruction_block',
+                id: `instruction_${sectionIndex}_${elementIndex}`,
+                content: element.content,
+                title: element.title,
+                style: element.style || 'info',
+                sectionIndex: sectionIndex
+              });
+              return;
+            }
+            
+            // Handle instruction blocks (old compatibility format)
+            if (element.question_type === 'instruction') {
+              fieldsToRender.push({
+                type: 'instruction_block',
+                id: `instruction_${sectionIndex}_${elementIndex}`,
+                content: element.question_text,
+                title: element.instruction_title,
+                style: element.instruction_style || 'info',
+                sectionIndex: sectionIndex
+              });
+              return;
+            }
+            
             // Add question as a label field
-            const questionText = question.text || question.question_text;
+            const questionText = element.text || element.question_text;
             if (questionText) {
               fieldsToRender.push({
                 type: 'question_label',
-                id: `question_${sectionIndex}_${questionIndex}`,
+                id: `question_${sectionIndex}_${elementIndex}`,
                 label: questionText,
                 sectionIndex: sectionIndex
               });
             }
             
             // Add all fields for this question
-            (question.fields || []).forEach((field, fieldIndex) => {
+            (element.fields || []).forEach((field, fieldIndex) => {
               fieldsToRender.push({
                 ...field,
-                id: field.name || `field_${sectionIndex}_${questionIndex}_${fieldIndex}`,
+                id: field.name || `field_${sectionIndex}_${elementIndex}_${fieldIndex}`,
                 field_type: field.type,
                 type: field.type,
                 label: field.label || field.name,
@@ -151,7 +179,7 @@ const LicenseePortal = ({ user, onBack }) => {
       const initialData = {};
       fieldsToRender.forEach(field => {
         const fieldType = field.type || field.field_type;
-        if (fieldType !== 'section_header' && fieldType !== 'question_label') {
+        if (fieldType !== 'section_header' && fieldType !== 'question_label' && fieldType !== 'instruction_block') {
           const fieldKey = field.id || field.field_key || field.name;
           initialData[fieldKey] = '';
         }
@@ -490,6 +518,22 @@ const LicenseePortal = ({ user, onBack }) => {
         return (
           <div className="mb-4">
             <p className="text-base font-semibold text-gray-800">{field.label}</p>
+          </div>
+        );
+      
+      case 'instruction_block':
+        const styleClasses = {
+          info: 'bg-blue-50 border-l-4 border-blue-400 text-blue-900',
+          warning: 'bg-orange-50 border-l-4 border-orange-400 text-orange-900',
+          alert: 'bg-red-50 border-l-4 border-red-400 text-red-900'
+        };
+        const instructionStyle = field.style || 'info';
+        return (
+          <div className={`mb-6 p-4 rounded ${styleClasses[instructionStyle] || styleClasses.info}`}>
+            {field.title && (
+              <div className="font-semibold mb-2">{field.title}</div>
+            )}
+            <div className="text-sm whitespace-pre-wrap">{field.content}</div>
           </div>
         );
       

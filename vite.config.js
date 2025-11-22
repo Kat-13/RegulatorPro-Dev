@@ -13,7 +13,9 @@ export default defineConfig({
       '5173-if4j0l8kg1824dwz6da49-f18e74fa.manusvm.computer',
       '5174-if4j0l8kg1824dwz6da49-f18e74fa.manusvm.computer',
       '5173-i4u5q4wzga20dqo40gx3x-50251577.manusvm.computer',
-      '5173-ir59yq84wremyxlxe5oro-5361a5a8.manusvm.computer'
+      '5173-ir59yq84wremyxlxe5oro-5361a5a8.manusvm.computer',
+      '5173-ixcky6v1m1pj9jx8800fr-95ff4e60.manusvm.computer',
+      '5174-ixcky6v1m1pj9jx8800fr-95ff4e60.manusvm.computer'
     ],
     proxy: {
       '/api': {

@@ -126,16 +126,25 @@ class PDFInterviewExtractor:
         
         system_prompt = """You are an expert at converting government and regulatory forms into user-friendly interview-style questionnaires.
 
-CRITICAL: Extract ALL fields and questions from the form. Do not skip or omit any information.
+CRITICAL: Extract ALL content from the form - fields, questions, AND instruction blocks. Do not skip or omit any information.
 
 Your task:
 1. Identify ALL fields/questions in the form
-2. Group related fields into logical questions (1-5 fields per question)
-3. Organize questions into sections by topic/category
-4. Create 5-20 sections (not just 1-2)
-5. Use actual field names and labels from the form
-6. Write natural, conversational question text
-7. Estimate time: 1-2 minutes per question
+2. Extract ALL instruction blocks (NOTE sections, header instructions, explanatory paragraphs)
+3. Group related fields into logical questions (1-5 fields per question)
+4. Organize questions into sections by topic/category
+5. Create 5-20 sections (not just 1-2)
+6. Use actual field names and labels from the form
+7. Write natural, conversational question text
+8. Estimate time: 1-2 minutes per question
+
+IMPORTANT: Instruction blocks include:
+- Header instructions ("All questions must be answered...")
+- NOTE or NOTICE sections
+- Explanatory paragraphs
+- Legal disclaimers
+- Document requirements
+- Any text that provides guidance but is not a question
 
 Return ONLY valid JSON in this exact format:
 {
@@ -146,8 +155,15 @@ Return ONLY valid JSON in this exact format:
     {
       "title": "Section Title",
       "description": "What this section covers",
-      "questions": [
+      "elements": [
         {
+          "element_type": "instruction_block",
+          "title": "Important Note",
+          "content": "All questions on this application must be answered fully and completely as required.",
+          "style": "info"
+        },
+        {
+          "element_type": "question",
           "question_text": "What is your full name?",
           "question_type": "fields",
           "fields": [
@@ -160,20 +176,32 @@ Return ONLY valid JSON in this exact format:
   ]
 }
 
+Element types:
+- "instruction_block": For NOTE sections, instructions, explanatory text
+- "question": For actual questions with fields to collect
+
+Instruction block styles:
+- "info": General instructions (blue)
+- "warning": Important notes, requirements (orange)
+- "alert": Legal notices, mandatory disclosures (red)
+
 Question types: "fields" (multiple inputs), "yesno" (yes/no), "choice" (select one), "signature"
 Field types: text, email, tel, number, date, select, checkbox, textarea"""
 
-        user_prompt = f"""Extract and convert this form to an interview structure. Include ALL fields and questions.
+        user_prompt = f"""Extract and convert this form to an interview structure. Include ALL fields, questions, AND instruction blocks.
 
 Form content:
 {pdf_text}
 
 IMPORTANT:
 - Extract EVERY field mentioned in the form
+- Extract ALL instruction blocks (NOTE sections, header instructions, explanatory text)
+- Place instruction blocks BEFORE related questions in the elements array
 - Create 5-20 sections (organize by topic)
 - Group related fields into questions
 - Use meaningful field names (snake_case)
 - Write conversational question text
+- Assign appropriate style to instruction blocks (info/warning/alert)
 - Return ONLY valid JSON"""
 
         try:
@@ -197,7 +225,14 @@ IMPORTANT:
                 result = self._ensure_meaningful_field_names(result)
             
             # Calculate metadata
-            total_questions = sum(len(section.get('questions', [])) for section in result.get('sections', []))
+            total_questions = 0
+            for section in result.get('sections', []):
+                # Count questions in elements array (new format)
+                if 'elements' in section:
+                    total_questions += sum(1 for elem in section['elements'] if elem.get('element_type') == 'question')
+                # Also support old format with questions array for backward compatibility
+                elif 'questions' in section:
+                    total_questions += len(section['questions'])
             result['total_questions'] = total_questions
             
             # Estimate time if not provided
@@ -217,26 +252,37 @@ IMPORTANT:
         Uses existing library fields when available, creates new ones when needed
         """
         for section in interview_data.get('sections', []):
-            for question in section.get('questions', []):
-                if question.get('question_type') == 'fields':
-                    # Match each field in the question
-                    matched_fields = []
-                    for field in question.get('fields', []):
-                        matched_field = self._match_single_field(field)
-                        matched_fields.append(matched_field)
-                    question['fields'] = matched_fields
-                else:
-                    # For single-field questions (yesno, choice, signature)
-                    field_name = question.get('field_name')
-                    if field_name:
-                        matched_field = self._match_single_field({
-                            'name': field_name,
-                            'label': question.get('question_text'),
-                            'field_type': question.get('question_type')
-                        })
-                        question['field_name'] = matched_field['name']
+            # Handle new format with elements array
+            if 'elements' in section:
+                for element in section['elements']:
+                    if element.get('element_type') == 'question':
+                        self._match_question_fields(element)
+            # Handle old format with questions array for backward compatibility
+            elif 'questions' in section:
+                for question in section['questions']:
+                    self._match_question_fields(question)
         
         return interview_data
+    
+    def _match_question_fields(self, question):
+        """Match fields in a single question"""
+        if question.get('question_type') == 'fields':
+            # Match each field in the question
+            matched_fields = []
+            for field in question.get('fields', []):
+                matched_field = self._match_single_field(field)
+                matched_fields.append(matched_field)
+            question['fields'] = matched_fields
+        else:
+            # For single-field questions (yesno, choice, signature)
+            field_name = question.get('field_name')
+            if field_name:
+                matched_field = self._match_single_field({
+                    'name': field_name,
+                    'label': question.get('question_text'),
+                    'field_type': question.get('question_type')
+                })
+                question['field_name'] = matched_field['name']
     
     def _match_single_field(self, field):
         """
@@ -271,18 +317,29 @@ IMPORTANT:
         This is a fallback when FieldLibrary is not available
         """
         for section in interview_data.get('sections', []):
-            for question in section.get('questions', []):
-                if question.get('question_type') == 'fields':
-                    for field in question.get('fields', []):
-                        # If field name is generic, improve it
-                        if self._is_generic_name(field.get('name', '')):
-                            field['name'] = self._generate_meaningful_name(field.get('label', ''))
-                else:
-                    field_name = question.get('field_name', '')
-                    if self._is_generic_name(field_name):
-                        question['field_name'] = self._generate_meaningful_name(question.get('question_text', ''))
+            # Handle new format with elements array
+            if 'elements' in section:
+                for element in section['elements']:
+                    if element.get('element_type') == 'question':
+                        self._ensure_question_field_names(element)
+            # Handle old format with questions array for backward compatibility
+            elif 'questions' in section:
+                for question in section['questions']:
+                    self._ensure_question_field_names(question)
         
         return interview_data
+    
+    def _ensure_question_field_names(self, question):
+        """Ensure field names are meaningful in a single question"""
+        if question.get('question_type') == 'fields':
+            for field in question.get('fields', []):
+                # If field name is generic, improve it
+                if self._is_generic_name(field.get('name', '')):
+                    field['name'] = self._generate_meaningful_name(field.get('label', ''))
+        else:
+            field_name = question.get('field_name', '')
+            if self._is_generic_name(field_name):
+                question['field_name'] = self._generate_meaningful_name(question.get('question_text', ''))
     
     def _is_generic_name(self, name):
         """Check if a field name is generic (field_1, question_2, etc.)"""
@@ -296,3 +353,5 @@ IMPORTANT:
         name = name.lower()
         # Limit length
         return name[:50] if name else 'field'
+    
+
