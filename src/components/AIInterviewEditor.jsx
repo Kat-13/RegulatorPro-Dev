@@ -38,6 +38,7 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draggedElement, setDraggedElement] = useState(null);
+  const [draggedSection, setDraggedSection] = useState(null);
 
   useEffect(() => {
     if (initialData) {
@@ -400,6 +401,28 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
     setDraggedElement(null);
   };
 
+  const handleSectionDragStart = (sectionIndex) => {
+    setDraggedSection(sectionIndex);
+  };
+
+  const handleSectionDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleSectionDrop = (targetSectionIndex) => {
+    if (draggedSection === null || draggedSection === targetSectionIndex) {
+      return;
+    }
+
+    const newSections = [...interviewData.sections];
+    const [movedSection] = newSections.splice(draggedSection, 1);
+    newSections.splice(targetSectionIndex, 0, movedSection);
+    
+    setInterviewData({ ...interviewData, sections: newSections });
+    setHasChanges(true);
+    setDraggedSection(null);
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -484,7 +507,14 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {interviewData.sections.map((section, sectionIndex) => (
-            <div key={sectionIndex} className="mb-6 border border-gray-200 rounded-lg overflow-hidden">
+            <div 
+              key={sectionIndex} 
+              className="mb-6 border border-gray-200 rounded-lg overflow-hidden cursor-move"
+              draggable
+              onDragStart={() => handleSectionDragStart(sectionIndex)}
+              onDragOver={handleSectionDragOver}
+              onDrop={() => handleSectionDrop(sectionIndex)}
+            >
               {/* Section Header */}
               <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-4 py-3 flex items-center justify-between">
                 <div className="flex-1 flex items-center gap-3">
