@@ -5,6 +5,7 @@ import ConditionalLogicBuilder from './ConditionalLogicBuilder'
 import FieldLibrarySidebar from './FieldLibrarySidebar'
 import KanbanBoard from './KanbanBoard'
 import ApplicationTypesKanban from './ApplicationTypesKanban'
+import SmartFormParser from './SmartFormParser'
 
 const API_BASE_URL = '/api'
 
@@ -27,6 +28,7 @@ function FormEditor() {
   const [viewMode, setViewMode] = useState('kanban') // 'list' or 'kanban'
   const [sections, setSections] = useState([])
   const [selectedAppTypeId, setSelectedAppTypeId] = useState(null)
+  const [showSmartParser, setShowSmartParser] = useState(false)
 
   useEffect(() => {
     fetchApplicationTypes()
@@ -641,6 +643,24 @@ function FormEditor() {
         />
         </div>
 
+      {/* Smart PDF Parser Modal */}
+      {showSmartParser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto relative">
+            <button
+              onClick={() => setShowSmartParser(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
+            >
+              <X size={24} />
+            </button>
+            <SmartFormParser onClose={() => {
+              setShowSmartParser(false);
+              fetchApplicationTypes(); // Refresh the list after parsing
+            }} />
+          </div>
+        </div>
+      )}
+
       {/* New License Type Modal */}
       {showNewTypeModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -683,12 +703,11 @@ function FormEditor() {
                 <div className="text-xs">Upload CSV/JSON</div>
               </button>
               <button
-                onClick={() => setCreationMode('ai-extract')}
-                className={`px-4 py-3 rounded-lg border-2 transition-colors ${
-                  creationMode === 'ai-extract'
-                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                }`}
+                onClick={() => {
+                  setShowNewTypeModal(false);
+                  setShowSmartParser(true);
+                }}
+                className="px-4 py-3 rounded-lg border-2 transition-colors border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:border-indigo-400"
               >
                 <div className="font-semibold mb-1">🤖 AI Extract</div>
                 <div className="text-xs">Upload PDF form</div>

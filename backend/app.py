@@ -3552,6 +3552,60 @@ def extract_pdf():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/parse-pdf', methods=['POST'])
+def parse_pdf():
+    """
+    Parse PDF form and return interview structure (without saving to database)
+    This is for the Smart PDF Form Parser UI
+    """
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file uploaded'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        # Get options
+        enable_smart = request.form.get('enable_smart_features', 'true').lower() == 'true'
+        
+        # Save uploaded file temporarily
+        import tempfile
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+            file.save(tmp_file.name)
+            tmp_path = tmp_file.name
+        
+        try:
+            # Extract interview structure using enhanced parser
+            from pdf_interview_extractor import EnhancedPDFInterviewExtractor
+            extractor = EnhancedPDFInterviewExtractor(db=db, FieldLibrary=FieldLibrary)
+            result = extractor.extract_interview_from_pdf(tmp_path, enable_smart_features=enable_smart)
+            
+            return jsonify({
+                'success': True,
+                'interview_structure': result,
+                'metadata': {
+                    'filename': file.filename,
+                    'smart_features_enabled': enable_smart,
+                    'total_sections': len(result.get('sections', [])),
+                    'total_questions': result.get('total_questions', 0),
+                    'estimated_time': result.get('estimated_time_minutes', 0)
+                }
+            })
+            
+        finally:
+            # Clean up temporary file
+            import os
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+    
+    except Exception as e:
+        app.logger.error(f"[PARSE_PDF] Error: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 # Register multi-step wizard endpoints
 from multistep_wizard_endpoints import register_multistep_endpoints
 register_multistep_endpoints(app, db, ApplicationSubmission, ApplicationType)
