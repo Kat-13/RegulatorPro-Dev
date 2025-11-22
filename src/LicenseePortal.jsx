@@ -569,6 +569,7 @@ const LicenseePortal = ({ user, onBack }) => {
           />
         );
       
+      case 'dropdown':
       case 'select':
         return (
           <select
@@ -698,21 +699,6 @@ const LicenseePortal = ({ user, onBack }) => {
             {field.description && (
               <p className="text-sm text-gray-600 mt-1">{field.description}</p>
             )}
-          </div>
-        );
-      
-      case 'instruction_block':
-        return (
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
-            <div className="flex items-start space-x-3">
-              <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div>
-                {field.title && (
-                  <h4 className="font-semibold text-blue-900 mb-1">{field.title}</h4>
-                )}
-                <div className="text-sm text-blue-800" dangerouslySetInnerHTML={{ __html: field.content || field.text || 'Instructions will appear here.' }} />
-              </div>
-            </div>
           </div>
         );
       

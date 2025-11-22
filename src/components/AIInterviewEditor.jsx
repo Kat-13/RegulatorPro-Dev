@@ -292,6 +292,12 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
       } else {
         field.type = type;
       }
+      // Initialize options array for types that need it
+      if (['select', 'dropdown', 'radio', 'checkbox'].includes(type)) {
+        if (!field.options || field.options.length === 0) {
+          field.options = ['Option 1', 'Option 2'];
+        }
+      }
       return { ...prev, sections: newSections };
     });
     setHasChanges(true);
