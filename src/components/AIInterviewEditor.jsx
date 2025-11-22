@@ -37,6 +37,7 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
   const [expandedSections, setExpandedSections] = useState({});
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [draggedElement, setDraggedElement] = useState(null);
 
   useEffect(() => {
     if (initialData) {
@@ -334,6 +335,37 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
     setHasChanges(true);
   };
 
+  const handleDragStart = (sectionIndex, elementIndex) => {
+    setDraggedElement({ sectionIndex, elementIndex });
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (sectionIndex, targetElementIndex) => {
+    if (!draggedElement || draggedElement.sectionIndex !== sectionIndex) {
+      return;
+    }
+
+    const newSections = [...interviewData.sections];
+    const section = newSections[sectionIndex];
+    const elements = section.elements || section.questions || [];
+    
+    const [movedElement] = elements.splice(draggedElement.elementIndex, 1);
+    elements.splice(targetElementIndex, 0, movedElement);
+    
+    if (section.elements) {
+      section.elements = elements;
+    } else {
+      section.questions = elements;
+    }
+    
+    setInterviewData({ ...interviewData, sections: newSections });
+    setHasChanges(true);
+    setDraggedElement(null);
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -463,7 +495,14 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
                     
                     if (isInstructionBlock) {
                       return (
-                        <div key={elementIndex} className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+                        <div 
+                          key={elementIndex} 
+                          className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 cursor-move"
+                          draggable
+                          onDragStart={() => handleDragStart(sectionIndex, elementIndex)}
+                          onDragOver={handleDragOver}
+                          onDrop={() => handleDrop(sectionIndex, elementIndex)}
+                        >
                           <div className="flex items-start gap-3 mb-3">
                             <span className="text-sm font-semibold text-blue-600 mt-2">INFO</span>
                             <input
@@ -510,7 +549,14 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
                     const questionIndex = elementIndex;
                     const questionText = question.question_text || question.question || '';
                     return (
-                      <div key={questionIndex} className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div 
+                        key={questionIndex} 
+                        className="bg-white border border-gray-200 rounded-lg p-4 cursor-move"
+                        draggable
+                        onDragStart={() => handleDragStart(sectionIndex, questionIndex)}
+                        onDragOver={handleDragOver}
+                        onDrop={() => handleDrop(sectionIndex, questionIndex)}
+                      >
                         {/* Question Header */}
                         <div className="flex items-start gap-3 mb-3">
                           <span className="text-sm font-semibold text-gray-500 mt-2">Q{questionIndex + 1}</span>
