@@ -197,7 +197,8 @@ IMPORTANT:
 - Extract EVERY field mentioned in the form
 - Extract ALL instruction blocks (NOTE sections, header instructions, explanatory text)
 - **PRESERVE THE EXACT ORDER** elements appear in the PDF - instruction blocks and questions must appear in the same sequence as the original form
-- Place instruction blocks BEFORE their related questions in the elements array
+- **DISTRIBUTE instruction blocks throughout the appropriate sections** - do NOT group all instruction blocks together
+- Place each instruction block in the section where it appears in the PDF, immediately before its related questions
 - Create 5-20 sections (organize by topic)
 - Group related fields into questions
 - Use meaningful field names (snake_case)
