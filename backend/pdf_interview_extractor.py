@@ -1,12 +1,6 @@
 """
 Enhanced AI-powered PDF to Interview Converter
-COMPLETE FILE - Just copy this entire thing and save as enhanced_pdf_interview_extractor.py
-
-This replaces your old pdf_interview_extractor.py with smart features:
-- Conditional logic detection ("If Yes, explain...")
-- Repeating sections (employment, courses)
-- Better field type detection
-- 100% backward compatible with your existing code
+Combines your existing architecture with smart form parsing capabilities
 """
 
 import os
@@ -23,17 +17,14 @@ class EnhancedPDFInterviewExtractor:
     def __init__(self, db=None, FieldLibrary=None):
         # OpenAI client is pre-configured via environment variables
         self.client = OpenAI()
-        self.model = "gpt-4.1-mini"  # CORRECT MODEL for your system
+        self.model = "gpt-4.1-mini"  # CORRECT MODEL - matches your allowed list
         self.db = db
         self.FieldLibrary = FieldLibrary
         
         # Import FieldMatcher for field matching
         if FieldLibrary:
-            try:
-                from field_matcher import FieldMatcher
-                self.field_matcher = FieldMatcher
-            except ImportError:
-                self.field_matcher = None
+            from field_matcher import FieldMatcher
+            self.field_matcher = FieldMatcher
         else:
             self.field_matcher = None
     
@@ -137,61 +128,112 @@ class EnhancedPDFInterviewExtractor:
         and smarter organization
         """
         
-        system_prompt = """You are an expert at converting government and regulatory forms into intelligent, user-friendly interview-style questionnaires with conditional logic.
+        system_prompt = """You are an expert at converting government and regulatory forms into intelligent, user-friendly interview-style questionnaires.
 
-CRITICAL INSTRUCTIONS:
-1. Extract ALL content: fields, questions, instruction blocks, and conditional relationships
-2. Identify conditional logic (e.g., "If Yes, explain...")
-3. Detect repeating sections (employment history, courses, etc.)
-4. Preserve exact order from the PDF
-5. Create 5-20 logical sections
-6. Use meaningful field names (snake_case)
-7. Detect field types accurately (text, email, tel, date, etc.)
+CRITICAL RULES - READ CAREFULLY:
+
+1. FOR FORM INPUT FIELDS: ALWAYS use question_type: "fields" with a fields array
+   - NEVER use question_type: "text", "date", or "signature" for individual fields
+   - Group related fields together (e.g., name fields, address fields, certification fields)
+   - Each field in the array MUST have: name, label, field_type, required
+
+2. FOR YES/NO QUESTIONS: Use question_type: "yesno" with field_name
+   - Use this ONLY for actual yes/no questions with checkboxes
+   - If there's a follow-up "If Yes, explain", create a separate conditional question
+
+3. FOR CHOICE FIELDS (CHECKBOXES/RADIO BUTTONS): Use question_type: "choice"
+   - Detect patterns like: "[ ] Option 1  [ ] Option 2  [ ] Option 3"
+   - Extract ALL options into an options array
+   - Set choice_type: "radio" for single selection (Check One)
+   - Set choice_type: "checkbox" for multiple selection (Check All That Apply)
+   - Example: "Level of Licensure: [ ] State Certified General [ ] State Certified Residential"
+   - Becomes: {"question_type": "choice", "choice_type": "radio", "options": ["State Certified General", "State Certified Residential"]}
+
+4. FOR INSTRUCTION TEXT: Use element_type: "instruction_block"
+   - Use for notes, certifications, legal text, explanations
+   - Styles: "info" (blue), "warning" (orange), "alert" (red)
 
 CONDITIONAL LOGIC:
-When you see patterns like:
-- "If Yes, explain..." 
-- "If you answered Yes to question X..."
-- "Required only if..."
-
-Create conditional_on and conditional_value fields.
-
-Example:
-Question: "Have you been convicted? Yes [ ] No [ ]"
-Follow-up: "If Yes, provide details:"
-
-This becomes TWO questions:
-1. Regular yes/no question (field: convicted)
-2. Conditional question with conditional_on: "convicted", conditional_value: "Yes"
+When you see "If Yes, explain..." patterns:
+1. Create a yesno question
+2. Create a separate fields question with conditional_on and conditional_value
 
 REPEATING SECTIONS:
-For sections like "Employment History (list last 5 positions)", create a repeating section with:
-- repeating: true
-- min_entries: 1
-- max_entries: 5
+For employment history, education, etc.:
+- Set repeating: true
+- Set min_entries and max_entries
 
-Return ONLY valid JSON in this format:
+EXAMPLE OUTPUT:
 {
-  "interview_name": "Application Name",
-  "description": "What this application collects",
-  "estimated_time_minutes": 20,
+  "interview_name": "Application for Real Estate Appraiser Credential",
+  "description": "Application form for Oklahoma Real Estate Appraiser Board",
+  "estimated_time_minutes": 30,
   "sections": [
     {
-      "title": "Section Title",
-      "description": "What this section covers",
+      "title": "Personal Information",
+      "description": "Basic applicant information",
       "repeating": false,
       "min_entries": null,
       "max_entries": null,
       "elements": [
         {
           "element_type": "instruction_block",
-          "title": "Important Note",
-          "content": "Instructions text here",
+          "title": "Instructions",
+          "content": "All questions must be answered fully and completely.",
           "style": "info"
         },
         {
           "element_type": "question",
-          "question_text": "Have you been convicted of a felony?",
+          "question_text": "Applicant Name and Contact Information",
+          "question_type": "fields",
+          "conditional_on": null,
+          "conditional_value": null,
+          "fields": [
+            {
+              "name": "full_legal_name",
+              "label": "Full Legal Name (Last, First, Middle)",
+              "field_type": "text",
+              "required": true,
+              "placeholder": "Last, First, Middle",
+              "help_text": ""
+            },
+            {
+              "name": "social_security_number",
+              "label": "Social Security Number",
+              "field_type": "text",
+              "required": true,
+              "placeholder": "XXX-XX-XXXX",
+              "help_text": ""
+            },
+            {
+              "name": "date_of_birth",
+              "label": "Date/Place of Birth",
+              "field_type": "date",
+              "required": true,
+              "placeholder": "mm/dd/yyyy",
+              "help_text": ""
+            }
+          ]
+        },
+        {
+          "element_type": "question",
+          "question_text": "Level of Licensure Applying For",
+          "question_type": "choice",
+          "field_name": "licensure_level",
+          "choice_type": "radio",
+          "options": [
+            "State Certified General Real Estate Appraiser",
+            "State Certified Residential Real Estate Appraiser",
+            "State Licensed Real Estate Appraiser",
+            "Trainee Appraiser"
+          ],
+          "required": true,
+          "conditional_on": null,
+          "conditional_value": null
+        },
+        {
+          "element_type": "question",
+          "question_text": "Have you ever been convicted of a felony?",
           "question_type": "yesno",
           "field_name": "convicted_felony",
           "required": true,
@@ -200,18 +242,18 @@ Return ONLY valid JSON in this format:
         },
         {
           "element_type": "question",
-          "question_text": "Please provide details of the conviction",
+          "question_text": "Provide details of conviction",
           "question_type": "fields",
           "conditional_on": "convicted_felony",
           "conditional_value": "Yes",
           "fields": [
             {
-              "name": "conviction_date",
-              "label": "Date of Conviction",
-              "field_type": "date",
+              "name": "conviction_details",
+              "label": "Details of conviction",
+              "field_type": "textarea",
               "required": true,
-              "placeholder": "",
-              "help_text": "Attach certified copy of final judgment"
+              "placeholder": "Provide full details",
+              "help_text": ""
             }
           ]
         }
@@ -220,12 +262,16 @@ Return ONLY valid JSON in this format:
   ]
 }
 
-Element types: "instruction_block", "question"
-Instruction styles: "info", "warning", "alert"
-Question types: "fields", "yesno", "choice", "signature", "file_upload"
-Field types: text, email, tel, number, date, select, checkbox, textarea, file
-
-IMPORTANT: Always include conditional_on and conditional_value fields (set to null if not conditional)."""
+REMEMBER:
+- question_type: "fields" for ALL form input fields (text, date, signature, etc.)
+- question_type: "yesno" ONLY for yes/no checkboxes
+- question_type: "choice" for radio buttons, checkboxes, or dropdowns with multiple options
+  - MUST include "options" array with all choices
+  - MUST include "choice_type": "radio" or "checkbox"
+  - Use "radio" for single selection (Check One)
+  - Use "checkbox" for multiple selection (Check All That Apply)
+- Group related fields together in the same fields array
+- Field types: text, email, tel, number, date, select, checkbox, textarea, file, signature"""
 
         user_prompt = f"""Extract this form into an intelligent interview structure with conditional logic and repeating sections.
 
@@ -258,22 +304,10 @@ REQUIREMENTS:
             result = json.loads(response.choices[0].message.content)
             
             # Post-process: match fields, improve names, validate structure
-            try:
-                if self.FieldLibrary and self.field_matcher:
-                    result = self._match_fields_with_library(result)
-                else:
-                    result = self._ensure_meaningful_field_names(result)
-            except Exception as post_process_error:
-                # If post-processing fails, log but continue with raw result
-                print(f"Warning: Post-processing failed: {post_process_error}")
-                # Ensure basic structure exists
-                if 'sections' not in result:
-                    result['sections'] = []
-                # Ensure all fields have names
-                for section in result.get('sections', []):
-                    for question in section.get('questions', []):
-                        if 'field_name' not in question or not question['field_name']:
-                            question['field_name'] = self._generate_meaningful_name(question.get('question_text', 'field'))
+            if self.FieldLibrary and self.field_matcher:
+                result = self._match_fields_with_library(result)
+            else:
+                result = self._ensure_meaningful_field_names(result)
             
             # Calculate metadata
             total_questions = 0
@@ -449,7 +483,7 @@ IMPORTANT:
                     'label': question.get('question_text'),
                     'field_type': question.get('question_type')
                 })
-                question['field_name'] = matched_field.get('name', field_name) if isinstance(matched_field, dict) else field_name
+                question['field_name'] = matched_field['name']
     
     def _match_single_field(self, field):
         """Match a single field against the library"""
@@ -520,5 +554,4 @@ IMPORTANT:
 
 
 # Backward compatibility: Keep original class name as alias
-PDFInterviewExtractor = EnhancedPDFInterviewExtractor
 PDFInterviewExtractor = EnhancedPDFInterviewExtractor
