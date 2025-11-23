@@ -1,163 +1,200 @@
 """
 Migration Script: Convert Existing Forms to Section-Based Structure
 
-This script migrates existing application types from field-based to section-based structure.
-It preserves all existing fields and organizes them into logical sections.
+Updated to use format_converter utility and Flask app context.
+
+Usage:
+    python3.11 migrate_to_sections.py [--dry-run] [--backup]
+
+Options:
+    --dry-run    Show what would be migrated without making changes
+    --backup     Create database backup before migration
 """
 
-import sqlite3
+import sys
 import json
+import argparse
+import shutil
 from datetime import datetime
+from app import app, db, ApplicationType
+from format_converter import convert_fields_to_sections
 
+def backup_database():
+    """Create a backup of the database before migration"""
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    backup_path = f'instance/regulatory_platform_backup_{timestamp}.db'
+    
+    try:
+        shutil.copy2('instance/regulatory_platform.db', backup_path)
+        print(f"✅ Database backed up to: {backup_path}")
+        return backup_path
+    except Exception as e:
+        print(f"❌ Backup failed: {e}")
+        return None
 
-def auto_categorize_field(field_name, field_type):
-    """Auto-categorize a field into a section based on its name"""
-    name_lower = field_name.lower()
-    
-    # Personal Information
-    personal_keywords = ['name', 'address', 'email', 'phone', 'contact', 'birth', 'ssn', 'social security', 'dob']
-    if any(kw in name_lower for kw in personal_keywords):
-        return 'Personal Information'
-    
-    # Professional Background
-    professional_keywords = ['license', 'certification', 'credential', 'experience', 'employer', 'practice', 'specialty']
-    if any(kw in name_lower for kw in professional_keywords):
-        return 'Professional Background'
-    
-    # Education
-    education_keywords = ['education', 'school', 'degree', 'college', 'university', 'training', 'course']
-    if any(kw in name_lower for kw in education_keywords):
-        return 'Education'
-    
-    # Compliance & Background
-    compliance_keywords = ['criminal', 'disciplinary', 'conviction', 'felony', 'background', 'complaint']
-    if any(kw in name_lower for kw in compliance_keywords):
-        return 'Compliance & Background Checks'
-    
-    # Employment
-    employment_keywords = ['employment', 'employer', 'job', 'work', 'occupation']
-    if any(kw in name_lower for kw in employment_keywords):
-        return 'Employment Information'
-    
-    # Default to Other
-    return 'Other Information'
-
-
-def migrate_application_type_to_sections(conn, app_type_id, app_name):
-    """Migrate a single application type to section-based structure"""
-    cursor = conn.cursor()
-    
-    # Get existing form structure
-    cursor.execute('SELECT form_definition, form_fields_v2 FROM application_type WHERE id = ?', (app_type_id,))
-    row = cursor.fetchone()
-    
-    if not row:
-        print(f"  ❌ Application type {app_type_id} not found")
-        return False
-    
-    form_definition = row[0]
-    form_fields_v2 = row[1]
-    
-    # Try to parse existing fields
-    fields = []
-    if form_fields_v2:
+def get_fields_from_old_format(app_type):
+    """Extract fields from OLD format (form_definition or form_fields_v2)"""
+    # Try form_definition first (oldest format)
+    if app_type.form_definition:
         try:
-            fields = json.loads(form_fields_v2)
+            fields = json.loads(app_type.form_definition)
+            if isinstance(fields, list) and len(fields) > 0:
+                return fields, 'form_definition'
         except:
             pass
     
-    if not fields and form_definition:
+    # Try form_fields_v2 (UFL format)
+    if app_type.form_fields_v2:
         try:
-            form_def = json.loads(form_definition)
-            fields = form_def.get('fields', [])
+            field_refs = json.loads(app_type.form_fields_v2)
+            # Reconstruct basic fields from UFL references
+            fields = []
+            for ref in field_refs:
+                overrides = ref.get('overrides', {})
+                fields.append({
+                    'name': overrides.get('display_name', '').lower().replace(' ', '_'),
+                    'label': overrides.get('display_name', ''),
+                    'type': 'text',
+                    'required': overrides.get('required', False),
+                    'help_text': overrides.get('help_text'),
+                    'placeholder': overrides.get('placeholder')
+                })
+            if len(fields) > 0:
+                return fields, 'form_fields_v2'
         except:
             pass
+    
+    return None, None
+
+def migrate_application_type(app_type, dry_run=False):
+    """Migrate a single application type to sections format"""
+    # Skip if already has sections
+    if app_type.sections:
+        return 'skipped', 'Already has sections'
+    
+    # Get fields from old format
+    fields, source = get_fields_from_old_format(app_type)
     
     if not fields:
-        print(f"  ℹ️  No fields found, creating default section")
-        sections = [{
-            'id': 'section_1',
-            'name': 'Application Information',
-            'description': 'General application information',
-            'order': 0,
-            'fields': []
-        }]
-    else:
-        # Group fields by section
-        section_groups = {}
-        for field in fields:
-            field_name = field.get('label') or field.get('name', 'Unnamed Field')
-            field_type = field.get('type', 'text')
-            section_name = auto_categorize_field(field_name, field_type)
-            
-            if section_name not in section_groups:
-                section_groups[section_name] = []
-            
-            section_groups[section_name].append(field)
-        
-        # Create sections
-        sections = []
-        section_order = 0
-        for section_name, section_fields in section_groups.items():
-            section_id = section_name.lower().replace(' ', '_').replace('&', 'and')
-            sections.append({
-                'id': section_id,
-                'name': section_name,
-                'description': f'{section_name} fields',
-                'order': section_order,
-                'fields': section_fields
-            })
-            section_order += 1
+        return 'skipped', 'No fields found in old formats'
     
-    # Update application_type with sections
-    sections_json = json.dumps(sections)
-    cursor.execute('UPDATE application_type SET sections = ? WHERE id = ?', (sections_json, app_type_id))
+    # Convert to sections using utility
+    sections = convert_fields_to_sections(fields)
     
-    print(f"  ✅ Migrated {len(sections)} sections with {len(fields)} total fields")
-    return True
-
+    if dry_run:
+        return 'would_migrate', f'Would convert {len(fields)} fields from {source}'
+    
+    # Update the application type
+    app_type.sections = json.dumps(sections)
+    
+    # Set parser_version to indicate migration
+    if not app_type.parser_version:
+        app_type.parser_version = f'Migrated_from_{source}'
+    
+    return 'migrated', f'Converted {len(fields)} fields from {source}'
 
 def main():
     """Main migration function"""
+    parser = argparse.ArgumentParser(description='Migrate application types to sections format')
+    parser.add_argument('--dry-run', action='store_true', help='Show what would be migrated without making changes')
+    parser.add_argument('--backup', action='store_true', help='Create database backup before migration')
+    args = parser.parse_args()
+    
     print("=" * 60)
-    print("Migration: Convert Forms to Section-Based Structure")
+    print("Application Type Migration to Sections Format")
     print("=" * 60)
     print()
     
-    # Connect to database
-    conn = sqlite3.connect('instance/regulatory_platform.db')
-    cursor = conn.cursor()
-    
-    # Get all application types
-    cursor.execute('SELECT id, name FROM application_type')
-    app_types = cursor.fetchall()
-    
-    if not app_types:
-        print("No application types found. Nothing to migrate.")
-        conn.close()
-        return
-    
-    print(f"Found {len(app_types)} application types to migrate:")
-    print()
-    
-    migrated_count = 0
-    for app_id, app_name in app_types:
-        print(f"📋 Migrating: {app_name} (ID: {app_id})")
-        if migrate_application_type_to_sections(conn, app_id, app_name):
-            migrated_count += 1
+    if args.dry_run:
+        print("🔍 DRY RUN MODE - No changes will be made")
         print()
     
-    # Commit changes
-    conn.commit()
-    cursor.close()
-    conn.close()
+    # Create backup if requested
+    if args.backup and not args.dry_run:
+        backup_path = backup_database()
+        if not backup_path:
+            print("❌ Cannot proceed without backup")
+            return 1
+        print()
     
-    print("=" * 60)
-    print(f"✅ Migration Complete!")
-    print(f"   Migrated: {migrated_count}/{len(app_types)} application types")
-    print("=" * 60)
-
+    with app.app_context():
+        # Get all application types
+        all_types = ApplicationType.query.all()
+        print(f"Found {len(all_types)} application types")
+        print()
+        
+        # Track results
+        results = {
+            'migrated': [],
+            'would_migrate': [],
+            'skipped': [],
+            'errors': []
+        }
+        
+        # Migrate each one
+        for app_type in all_types:
+            try:
+                status, message = migrate_application_type(app_type, dry_run=args.dry_run)
+                results[status].append({
+                    'id': app_type.id,
+                    'name': app_type.name,
+                    'message': message
+                })
+                
+                # Print progress
+                icon = {
+                    'migrated': '✅',
+                    'would_migrate': '🔄',
+                    'skipped': '⏭️'
+                }[status]
+                print(f"{icon} [{app_type.id}] {app_type.name}: {message}")
+                
+            except Exception as e:
+                results['errors'].append({
+                    'id': app_type.id,
+                    'name': app_type.name,
+                    'error': str(e)
+                })
+                print(f"❌ [{app_type.id}] {app_type.name}: ERROR - {e}")
+        
+        # Commit changes if not dry run
+        if not args.dry_run and len(results['migrated']) > 0:
+            try:
+                db.session.commit()
+                print()
+                print("✅ Changes committed to database")
+            except Exception as e:
+                db.session.rollback()
+                print()
+                print(f"❌ Failed to commit: {e}")
+                return 1
+        
+        # Print summary
+        print()
+        print("=" * 60)
+        print("MIGRATION SUMMARY")
+        print("=" * 60)
+        
+        if args.dry_run:
+            print(f"Would migrate: {len(results['would_migrate'])}")
+        else:
+            print(f"Migrated:      {len(results['migrated'])}")
+        
+        print(f"Skipped:       {len(results['skipped'])}")
+        print(f"Errors:        {len(results['errors'])}")
+        print()
+        
+        if results['errors']:
+            print("ERRORS:")
+            for err in results['errors']:
+                print(f"  - [{err['id']}] {err['name']}: {err['error']}")
+            print()
+        
+        if args.dry_run and results['would_migrate']:
+            print("To perform the migration, run without --dry-run flag")
+            print("Recommended: python3.11 migrate_to_sections.py --backup")
+    
+    return 0
 
 if __name__ == '__main__':
-    main()
-
+    sys.exit(main())
