@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import ApplicationTypeCard from './ApplicationTypeCard';
-import ApplicationTypeModal from './ApplicationTypeModal';
 import AIInterviewEditor from './AIInterviewEditor';
 
 const ApplicationTypesKanban = ({ 
@@ -71,45 +70,36 @@ const ApplicationTypesKanban = ({
         </div>
       </div>
       
-      {/* Modal - Route to AIInterviewEditor for PDF/CSV extracted types */}
-      {selectedAppType && (() => {
-        const parserVersion = selectedAppType.parserVersion || selectedAppType.parser_version;
-        const isAIExtracted = parserVersion === 'AI_PDF_Extractor_v1' || parserVersion === 'CSV_Import_v1';
-        return isAIExtracted ? (
-          <AIInterviewEditor
-            applicationType={selectedAppType}
-            interviewData={{
-              interview_name: selectedAppType.name,
-              description: selectedAppType.description,
-              sections: typeof selectedAppType.sections === 'string' 
-                ? JSON.parse(selectedAppType.sections || '[]')
-                : (selectedAppType.sections || []),
-              estimated_time_minutes: selectedAppType.estimated_time_minutes || 30
-            }}
-            onSave={(updatedInterview) => {
-              const updatedAppType = {
-                ...selectedAppType,
-                name: updatedInterview.interview_name,
-                description: updatedInterview.description,
-                sections: JSON.stringify(updatedInterview.sections),
-                estimated_time_minutes: updatedInterview.estimated_time_minutes
-              };
-              onUpdateApplicationType && onUpdateApplicationType(updatedAppType);
-              setSelectedAppType(null);
-            }}
-            onClose={() => setSelectedAppType(null)}
-          />
-        ) : (
-          <ApplicationTypeModal
-            applicationType={selectedAppType}
-            onClose={() => setSelectedAppType(null)}
-            onSave={(updatedAppType) => {
-              onUpdateApplicationType && onUpdateApplicationType(updatedAppType);
-              setSelectedAppType(null);
-            }}
-          />
-        );
-      })()}
+      {/* Modal - Always use AIInterviewEditor (NEW format) */}
+      {selectedAppType && (
+        <AIInterviewEditor
+          applicationType={selectedAppType}
+          interviewData={{
+            interview_name: selectedAppType.name,
+            description: selectedAppType.description,
+            sections: typeof selectedAppType.sections === 'string' 
+              ? JSON.parse(selectedAppType.sections || '[]')
+              : (selectedAppType.sections || [{
+                  title: "Section 1",
+                  description: "",
+                  elements: []
+                }]),
+            estimated_time_minutes: selectedAppType.estimated_time_minutes || 30
+          }}
+          onSave={(updatedInterview) => {
+            const updatedAppType = {
+              ...selectedAppType,
+              name: updatedInterview.interview_name,
+              description: updatedInterview.description,
+              sections: JSON.stringify(updatedInterview.sections),
+              estimated_time_minutes: updatedInterview.estimated_time_minutes
+            };
+            onUpdateApplicationType && onUpdateApplicationType(updatedAppType);
+            setSelectedAppType(null);
+          }}
+          onClose={() => setSelectedAppType(null)}
+        />
+      )}
     </div>
   );
 };
