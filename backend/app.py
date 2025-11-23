@@ -3706,14 +3706,15 @@ def parse_pdf_v2():
         file_content = file.read()
         base64_pdf = base64.b64encode(file_content).decode('utf-8')
         
-        # Get OpenAI API key from environment
+        # Get OpenAI API key and base URL from environment
         openai_api_key = os.environ.get('OPENAI_API_KEY')
+        openai_base_url = os.environ.get('OPENAI_BASE_URL', 'https://api.openai.com/v1')
         if not openai_api_key:
             return jsonify({'error': 'OpenAI API key not configured'}), 500
         
-        # Call OpenAI API
+        # Call OpenAI API (via Manus proxy if configured)
         response = requests.post(
-            'https://api.openai.com/v1/chat/completions',
+            f'{openai_base_url}/chat/completions',
             headers={
                 'Content-Type': 'application/json',
                 'Authorization': f'Bearer {openai_api_key}'
