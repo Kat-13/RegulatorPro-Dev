@@ -297,6 +297,7 @@ REQUIREMENTS:
                     {"role": "user", "content": user_prompt}
                 ],
                 temperature=0.2,
+                max_tokens=16000,  # Increased for longer forms
                 response_format={"type": "json_object"}
             )
             
@@ -426,6 +427,7 @@ IMPORTANT:
                     {"role": "user", "content": user_prompt}
                 ],
                 temperature=0.2,
+                max_tokens=16000,  # Increased for longer forms
                 response_format={"type": "json_object"}
             )
             
@@ -483,7 +485,8 @@ IMPORTANT:
                     'label': question.get('question_text'),
                     'field_type': question.get('question_type')
                 })
-                question['field_name'] = matched_field['name']
+                # Safety: Generate meaningful name if missing
+                question['field_name'] = matched_field.get('name', self._generate_meaningful_name(question.get('question_text', 'field')))
     
     def _match_single_field(self, field):
         """Match a single field against the library"""
@@ -534,11 +537,32 @@ IMPORTANT:
         """Ensure field names are meaningful in a single question"""
         if question.get('question_type') == 'fields':
             for field in question.get('fields', []):
-                if self._is_generic_name(field.get('name', '')):
+                # CRITICAL: Always ensure 'name' exists
+                if not field.get('name'):
+                    field['name'] = self._generate_meaningful_name(field.get('label', 'field'))
+                elif self._is_generic_name(field.get('name', '')):
                     field['name'] = self._generate_meaningful_name(field.get('label', ''))
+                
+                # Ensure other required keys exist
+                if 'label' not in field:
+                    field['label'] = field.get('name', 'Field').replace('_', ' ').title()
+                if 'field_type' not in field:
+                    field['field_type'] = 'text'
+                if 'required' not in field:
+                    field['required'] = False
+        elif question.get('question_type') == 'choice':
+            # Ensure choice fields have required attributes
+            if not question.get('field_name'):
+                question['field_name'] = self._generate_meaningful_name(question.get('question_text', 'choice'))
+            if not question.get('options'):
+                question['options'] = []
+            if not question.get('choice_type'):
+                question['choice_type'] = 'radio'
         else:
             field_name = question.get('field_name', '')
-            if self._is_generic_name(field_name):
+            if not field_name:
+                question['field_name'] = self._generate_meaningful_name(question.get('question_text', 'field'))
+            elif self._is_generic_name(field_name):
                 question['field_name'] = self._generate_meaningful_name(question.get('question_text', ''))
     
     def _is_generic_name(self, name):

@@ -1,0 +1,433 @@
+"""
+Enhanced AI-powered PDF to Interview Converter
+FINAL BULLETPROOF VERSION - All fixes included
+
+Replace your pdf_interview_extractor.py with this entire file.
+NO modifications needed. Just copy/paste and save.
+"""
+
+import os
+import json
+import re
+from openai import OpenAI
+
+class EnhancedPDFInterviewExtractor:
+    """Enhanced PDF parser with smart features and error handling"""
+    
+    def __init__(self, db=None, FieldLibrary=None):
+        self.client = OpenAI()
+        self.model = "gpt-4.1-mini"  # Correct model for your system
+        self.db = db
+        self.FieldLibrary = FieldLibrary
+        
+        if FieldLibrary:
+            try:
+                from field_matcher import FieldMatcher
+                self.field_matcher = FieldMatcher
+            except ImportError:
+                self.field_matcher = None
+        else:
+            self.field_matcher = None
+    
+    def extract_interview_from_pdf(self, pdf_path, enable_smart_features=True):
+        """Extract interview structure from PDF"""
+        try:
+            pdf_text = self._extract_text_from_pdf(pdf_path)
+            
+            if enable_smart_features:
+                return self._analyze_with_enhanced_ai(pdf_text)
+            else:
+                return self._analyze_with_ai(pdf_text)
+        except Exception as e:
+            raise Exception(f"Failed to extract PDF: {str(e)}")
+    
+    def _extract_text_from_pdf(self, pdf_path):
+        """Extract text from PDF with OCR fallback"""
+        import subprocess
+        
+        try:
+            result = subprocess.run(
+                ['pdftotext', pdf_path, '-'],
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            
+            if result.returncode == 0 and len(result.stdout.strip()) > 100:
+                return result.stdout
+            
+            return self._extract_text_with_ocr(pdf_path)
+                
+        except subprocess.TimeoutExpired:
+            raise Exception("PDF text extraction timed out")
+        except FileNotFoundError:
+            raise Exception("pdftotext not found. Install poppler-utils.")
+    
+    def _extract_text_with_ocr(self, pdf_path):
+        """OCR extraction for scanned PDFs"""
+        import subprocess
+        import tempfile
+        
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                subprocess.run(
+                    ['pdftoppm', pdf_path, os.path.join(tmpdir, 'page'), '-png'],
+                    capture_output=True,
+                    timeout=60
+                )
+                
+                images = sorted([f for f in os.listdir(tmpdir) if f.endswith('.png')])
+                
+                if not images:
+                    raise Exception("No images generated from PDF")
+                
+                all_text = []
+                for img in images:
+                    img_path = os.path.join(tmpdir, img)
+                    result = subprocess.run(
+                        ['tesseract', img_path, 'stdout'],
+                        capture_output=True,
+                        text=True,
+                        timeout=30
+                    )
+                    if result.returncode == 0:
+                        all_text.append(result.stdout)
+                
+                return '\n'.join(all_text) or "No text extracted"
+                
+        except Exception as e:
+            raise Exception(f"OCR failed: {str(e)}")
+    
+    def _analyze_with_enhanced_ai(self, pdf_text):
+        """Enhanced AI analysis with conditional logic"""
+        
+        system_prompt = """Convert this form into an intelligent interview with conditional logic.
+
+Extract ALL: fields, questions, instructions, and conditional relationships.
+
+Return ONLY valid JSON:
+{
+  "interview_name": "Form Name",
+  "description": "Brief description",
+  "estimated_time_minutes": 20,
+  "sections": [
+    {
+      "title": "Section Title",
+      "description": "Section description",
+      "repeating": false,
+      "min_entries": null,
+      "max_entries": null,
+      "elements": [
+        {
+          "element_type": "instruction_block",
+          "title": "Note",
+          "content": "Instructions here",
+          "style": "info"
+        },
+        {
+          "element_type": "question",
+          "question_text": "Question text?",
+          "question_type": "yesno",
+          "field_name": "field_name",
+          "required": true,
+          "conditional_on": null,
+          "conditional_value": null
+        }
+      ]
+    }
+  ]
+}
+
+CRITICAL RULES:
+1. For "If Yes, explain" patterns: Create TWO questions (one yes/no, one conditional)
+2. Set conditional_on to the previous field_name and conditional_value to "Yes"
+3. EVERY field MUST have a "name" attribute (required, never omit)
+4. Use snake_case for all field names
+5. Field types: text, email, tel, date, number, select, checkbox, textarea, file
+6. Question types: fields, yesno, choice, signature, file_upload
+7. For repeating sections (employment, courses): set repeating: true with min/max entries
+8. Preserve PDF order exactly
+9. Create 5-20 logical sections
+
+Element types: "instruction_block", "question"
+Instruction styles: "info", "warning", "alert"
+
+NEVER omit the "name" field - it's mandatory for ALL fields."""
+
+        user_prompt = f"""Parse this PDF form with conditional logic and repeating sections.
+
+Form:
+{pdf_text[:15000]}
+
+Requirements:
+- Extract EVERY field with a valid "name" attribute
+- Detect conditional logic ("If Yes...", "Required only if...")
+- Identify repeating sections
+- Preserve exact order
+- Use meaningful snake_case names
+- Return ONLY JSON"""
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.2,
+                max_tokens=8000,  # Increased for complex forms
+                response_format={"type": "json_object"}
+            )
+            
+            result = json.loads(response.choices[0].message.content)
+            
+            # Post-process and validate
+            result = self._validate_and_fix_structure(result)
+            
+            if self.FieldLibrary and self.field_matcher:
+                result = self._match_fields_with_library(result)
+            else:
+                result = self._ensure_meaningful_field_names(result)
+            
+            # Calculate metadata
+            total_questions = self._count_questions(result)
+            result['total_questions'] = total_questions
+            
+            if 'estimated_time_minutes' not in result or result['estimated_time_minutes'] == 0:
+                result['estimated_time_minutes'] = max(10, total_questions * 2)
+            
+            result['extraction_model'] = self.model
+            result['enhanced_features'] = True
+            
+            return result
+            
+        except Exception as e:
+            raise Exception(f"AI extraction failed: {str(e)}")
+    
+    def _analyze_with_ai(self, pdf_text):
+        """Original AI analysis for backward compatibility"""
+        
+        system_prompt = """Convert this government form into an interview structure.
+
+Extract ALL fields, questions, and instruction blocks.
+
+Return ONLY valid JSON:
+{
+  "interview_name": "Form Name",
+  "description": "What it collects",
+  "estimated_time_minutes": 20,
+  "sections": [
+    {
+      "title": "Section",
+      "description": "Description",
+      "elements": [
+        {
+          "element_type": "instruction_block",
+          "title": "Note",
+          "content": "Text",
+          "style": "info"
+        },
+        {
+          "element_type": "question",
+          "question_text": "Question?",
+          "question_type": "fields",
+          "fields": [
+            {"name": "field_name", "label": "Label", "field_type": "text", "required": true}
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+CRITICAL: Every field MUST have a "name" attribute. Never omit it."""
+
+        user_prompt = f"""Extract form structure. Include ALL fields and instructions.
+
+Form:
+{pdf_text[:15000]}
+
+Return ONLY JSON with all field names included."""
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.2,
+                max_tokens=8000,
+                response_format={"type": "json_object"}
+            )
+            
+            result = json.loads(response.choices[0].message.content)
+            result = self._validate_and_fix_structure(result)
+            
+            if self.FieldLibrary and self.field_matcher:
+                result = self._match_fields_with_library(result)
+            else:
+                result = self._ensure_meaningful_field_names(result)
+            
+            total_questions = self._count_questions(result)
+            result['total_questions'] = total_questions
+            
+            if 'estimated_time_minutes' not in result or result['estimated_time_minutes'] == 0:
+                result['estimated_time_minutes'] = max(10, total_questions * 2)
+            
+            result['extraction_model'] = self.model
+            
+            return result
+            
+        except Exception as e:
+            raise Exception(f"AI extraction failed: {str(e)}")
+    
+    def _validate_and_fix_structure(self, result):
+        """Validate and fix any structural issues"""
+        if not isinstance(result, dict):
+            raise Exception("Invalid result: not a dictionary")
+        
+        if 'sections' not in result:
+            result['sections'] = []
+        
+        for section in result.get('sections', []):
+            if 'elements' not in section:
+                section['elements'] = []
+            
+            for element in section['elements']:
+                if element.get('element_type') == 'question':
+                    # Fix missing field names
+                    if element.get('question_type') == 'fields':
+                        for field in element.get('fields', []):
+                            if not field.get('name'):
+                                field['name'] = self._generate_meaningful_name(
+                                    field.get('label', 'field')
+                                )
+                    else:
+                        if not element.get('field_name'):
+                            element['field_name'] = self._generate_meaningful_name(
+                                element.get('question_text', 'question')
+                            )
+        
+        return result
+    
+    def _count_questions(self, result):
+        """Count total questions"""
+        total = 0
+        for section in result.get('sections', []):
+            if 'elements' in section:
+                total += sum(1 for e in section['elements'] if e.get('element_type') == 'question')
+            elif 'questions' in section:
+                total += len(section['questions'])
+        return total
+    
+    def _match_fields_with_library(self, interview_data):
+        """Match fields against FieldLibrary"""
+        for section in interview_data.get('sections', []):
+            elements = section.get('elements', section.get('questions', []))
+            for element in elements:
+                if element.get('element_type') == 'question' or 'question_text' in element:
+                    self._match_question_fields(element)
+        return interview_data
+    
+    def _match_question_fields(self, question):
+        """Match fields in a question"""
+        if question.get('question_type') == 'fields':
+            matched_fields = []
+            for field in question.get('fields', []):
+                matched_field = self._match_single_field(field)
+                matched_fields.append(matched_field)
+            question['fields'] = matched_fields
+        else:
+            field_name = question.get('field_name')
+            if field_name:
+                matched_field = self._match_single_field({
+                    'name': field_name,
+                    'label': question.get('question_text'),
+                    'field_type': question.get('question_type')
+                })
+                question['field_name'] = matched_field.get('name', field_name)
+    
+    def _match_single_field(self, field):
+        """Match single field against library with safety checks"""
+        if not isinstance(field, dict):
+            return {'name': 'field', 'label': 'Field', 'field_type': 'text', 'required': False}
+        
+        # Ensure field has a name
+        field_name = field.get('name', '')
+        if not field_name:
+            field_name = self._generate_meaningful_name(field.get('label', 'field'))
+            field['name'] = field_name
+        
+        # Try library match if available
+        if field_name and self.FieldLibrary:
+            try:
+                lib_field = self.FieldLibrary.query.filter_by(field_key=field_name).first()
+                if lib_field:
+                    return lib_field.to_dict()
+                
+                if self.field_matcher:
+                    from field_matcher import FieldMatcher
+                    matched_field, confidence, match_type = FieldMatcher.find_match(
+                        field_name, 
+                        self.FieldLibrary.query
+                    )
+                    if matched_field and confidence >= 0.7:
+                        return matched_field.to_dict()
+            except Exception:
+                pass  # If matching fails, just use the field as-is
+        
+        # Return field with all required keys
+        return {
+            'name': field.get('name', field_name),
+            'label': field.get('label', 'Field'),
+            'field_type': field.get('field_type', 'text'),
+            'required': field.get('required', False),
+            'placeholder': field.get('placeholder', ''),
+            'help_text': field.get('help_text', '')
+        }
+    
+    def _ensure_meaningful_field_names(self, interview_data):
+        """Ensure all field names are meaningful"""
+        for section in interview_data.get('sections', []):
+            elements = section.get('elements', section.get('questions', []))
+            for element in elements:
+                if element.get('element_type') == 'question' or 'question_text' in element:
+                    self._ensure_question_field_names(element)
+        return interview_data
+    
+    def _ensure_question_field_names(self, question):
+        """Ensure field names are meaningful - BULLETPROOF VERSION"""
+        if question.get('question_type') == 'fields':
+            for field in question.get('fields', []):
+                # Handle missing or generic names
+                if 'name' not in field or not field.get('name') or self._is_generic_name(field.get('name', '')):
+                    field['name'] = self._generate_meaningful_name(field.get('label', 'field'))
+        else:
+            field_name = question.get('field_name', '')
+            if not field_name or self._is_generic_name(field_name):
+                question['field_name'] = self._generate_meaningful_name(
+                    question.get('question_text', 'question')
+                )
+    
+    def _is_generic_name(self, name):
+        """Check if field name is generic"""
+        if not name:
+            return True
+        return bool(re.match(r'^(field|question|input|data)_?\d*$', name, re.IGNORECASE))
+    
+    def _generate_meaningful_name(self, label):
+        """Generate meaningful field name from label"""
+        if not label:
+            return f'field_{int(os.urandom(4).hex(), 16)}'
+        
+        name = re.sub(r'[^a-zA-Z0-9\s]', '', str(label))
+        name = re.sub(r'\s+', '_', name.strip())
+        name = name.lower()
+        name = name[:50] if name else 'field'
+        
+        return name if name else f'field_{int(os.urandom(4).hex(), 16)}'
+
+
+# Backward compatibility
+PDFInterviewExtractor = EnhancedPDFInterviewExtractor

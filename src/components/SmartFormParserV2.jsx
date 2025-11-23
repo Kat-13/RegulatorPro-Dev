@@ -132,106 +132,27 @@ function SmartFormParserV2({ onClose }) {
     setError(null);
 
     try {
-      // Convert PDF to base64
-      const base64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const base64String = reader.result.split(',')[1];
-          resolve(base64String);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(pdfFile);
-      });
+      // Send PDF to backend for parsing
+      const formData = new FormData();
+      formData.append('file', pdfFile);
 
-      // Call OpenAI API
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch('/api/parse-pdf-v2', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY || ''}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          max_tokens: 16000,
-          messages: [{
-            role: 'user',
-            content: [
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:application/pdf;base64,${base64}`
-                }
-              },
-              {
-                type: 'text',
-                text: `Parse this licensing board PDF form into a structured JSON schema.
-
-STRICT RULES:
-1. Return ONLY valid JSON, no markdown, no extra text
-2. Use this exact structure:
-{
-  "title": "Form Title",
-  "sections": [
-    {
-      "id": "sec_1",
-      "title": "Section Title",
-      "instructions": "Any instructional text for this section",
-      "fields": [
-        {
-          "id": "f_1",
-          "label": "Field Label",
-          "type": "text|email|tel|date|number|textarea|radio|checkbox|file",
-          "required": true|false,
-          "placeholder": "optional placeholder",
-          "options": ["Option 1", "Option 2"],
-          "position": 1,
-          "conditionalOn": null,
-          "conditionalValue": null,
-          "helpText": "optional help text"
-        }
-      ]
-    }
-  ]
-}
-
-3. Section IDs: "sec_1", "sec_2", etc.
-4. Field IDs: "f_1", "f_2", etc. (globally unique across all sections)
-5. Field types: ONLY use: text, email, tel, date, number, textarea, radio, checkbox, file
-6. Radio fields MUST have options array
-7. Checkbox fields are boolean (no options)
-8. Instructions go in section.instructions, NOT as a field
-9. Multi-part questions (e.g., first/middle/last name) = separate fields
-10. Preserve exact order of fields as they appear in PDF
-11. If a field shows/hides based on another field, set conditionalOn to that field's id and conditionalValue to the trigger value
-
-Return ONLY the JSON object.`
-              }
-            ]
-          }]
-        })
+        body: formData
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`API error: ${errorData.error?.message || response.statusText}`);
+        throw new Error(errorData.error || 'Failed to parse PDF');
       }
 
       const data = await response.json();
 
-      // Check for truncation
-      if (data.choices[0].finish_reason === 'length') {
-        throw new Error('Response was truncated - form too complex. Try a simpler form or split into sections.');
+      if (!data.success) {
+        throw new Error(data.error || 'Unknown error occurred');
       }
 
-      // Extract text content
-      const textContent = data.choices[0].message.content;
-      if (!textContent) {
-        throw new Error('No text content in AI response');
-      }
-
-      // Clean and parse
-      const cleanedJSON = cleanAIResponse(textContent);
-      const parsedForm = JSON.parse(cleanedJSON);
+      const parsedForm = data.form_structure;
 
       // Validate
       validateFormStructure(parsedForm);
