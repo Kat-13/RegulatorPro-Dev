@@ -1,17 +1,21 @@
-import React, { useState } from 'react';
-import { Upload, FileText, Edit3, Download, AlertCircle, CheckCircle, ArrowUp, ArrowDown, Trash2, GripVertical, Plus, Info, Copy, Save, Settings, Code } from 'lucide-react';
+// COMPLETE SmartFormParser.jsx - ALL FEATURES - 900+ LINES
+// Replace your ENTIRE src/components/SmartFormParser.jsx with this
 
-export default function SmartPDFFormParser() {
+import React, { useState } from 'react';
+import { Upload, FileText, Download, AlertCircle, CheckCircle, Info, Edit3, ArrowUp, ArrowDown, Trash2, GripVertical, Plus, Copy, Save, Settings, Code, X } from 'lucide-react';
+
+export default function SmartFormParser({ onClose }) {
   const [pdfFile, setPdfFile] = useState(null);
   const [formStructure, setFormStructure] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({});
   const [editMode, setEditMode] = useState(false);
-  const [editingField, setEditingField] = useState(null);
+  const [editingElement, setEditingElement] = useState(null);
 
-  const handleFileUpload = async (e) => {
+  const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file || file.type !== 'application/pdf') {
       setError('Please upload a valid PDF file');
@@ -21,7 +25,7 @@ export default function SmartPDFFormParser() {
     setError('');
   };
 
-  const parseFormWithAI = async () => {
+  const parseWithBackend = async () => {
     if (!pdfFile) {
       setError('Please upload a PDF first');
       return;
@@ -29,168 +33,152 @@ export default function SmartPDFFormParser() {
 
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
-      const base64Data = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(pdfFile);
-      });
+      const formData = new FormData();
+      formData.append('file', pdfFile);
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('/api/parse-pdf', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 8000,
-          messages: [{
-            role: 'user',
-            content: [
-              {
-                type: 'document',
-                source: {
-                  type: 'base64',
-                  media_type: 'application/pdf',
-                  data: base64Data
-                }
-              },
-              {
-                type: 'text',
-                text: `Parse this PDF form into a smart form structure. RESPOND WITH ONLY JSON - NO OTHER TEXT.
-
-{
-  "title": "Form Title",
-  "sections": [
-    {
-      "id": "sec_1",
-      "title": "Section Name",
-      "instructions": "Brief instructions",
-      "fields": [
-        {
-          "id": "f_1",
-          "label": "Label text",
-          "type": "text",
-          "required": true,
-          "placeholder": "",
-          "options": [],
-          "position": 1,
-          "conditionalOn": null,
-          "conditionalValue": null,
-          "helpText": ""
-        }
-      ]
-    }
-  ]
-}
-
-RULES:
-1. Use SHORT IDs: "f_1", "f_2", "sec_1"
-2. Keep labels concise
-3. For YES/NO with "If Yes explain": Create 2 fields, second has conditionalOn set
-4. For repeating sections (employment/courses): Create 3-6 sets
-5. Extract key instructions only
-6. Field types: text, email, tel, date, textarea, radio, file
-7. Radio for Yes/No: options: ["Yes","No"]
-8. Group related fields into logical sections
-
-Parse the entire form. Return ONLY the JSON.`
-              }
-            ]
-          }]
-        })
+        body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`API request failed: ${errorData.error?.message || response.statusText}`);
+        throw new Error(errorData.error || 'Failed to parse PDF');
       }
 
       const data = await response.json();
       
-      if (data.stop_reason === 'max_tokens') {
-        throw new Error('Response was truncated. The form is too complex. Try breaking it into smaller sections or use a simpler PDF first.');
-      }
-      
-      const result = data.content
-        .filter(item => item.type === 'text')
-        .map(item => item.text)
-        .join('\n')
-        .trim();
-
-      let cleanResult = result
-        .replace(/```json|```/g, '')
-        .trim();
-      
-      cleanResult = cleanResult.replace(/Show more \([^)]+\)/g, '');
-      
-      const firstBrace = cleanResult.indexOf('{');
-      const lastBrace = cleanResult.lastIndexOf('}');
-      
-      if (firstBrace === -1 || lastBrace === -1) {
-        throw new Error('No valid JSON object found in response');
-      }
-      
-      cleanResult = cleanResult.substring(firstBrace, lastBrace + 1);
-
-      cleanResult = cleanResult
-        .replace(/,(\s*[}\]])/g, '$1')
-        .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":')
-        .replace(/:\s*'([^']*)'/g, ': "$1"')
-        .replace(/\/\/.*$/gm, '')
-        .replace(/\/\*[\s\S]*?\*\//g, '')
-        .replace(/\}[^}]*$/, '}');
-
-      let parsedForm;
-      try {
-        parsedForm = JSON.parse(cleanResult);
-      } catch (parseError) {
-        throw new Error(`JSON parsing failed: ${parseError.message}. The AI returned invalid JSON. Please try again or try a simpler PDF first.`);
-      }
-      
-      if (!parsedForm.sections || parsedForm.sections.length === 0) {
-        throw new Error('No sections detected in form');
-      }
-      
-      setFormStructure(parsedForm);
-      setStep(2);
-      
-      const initialData = {};
-      parsedForm.sections.forEach(section => {
-        section.fields.forEach(field => {
-          initialData[field.id] = field.type === 'checkbox' ? false : '';
+      if (data.success) {
+        setFormStructure(data.interview_structure);
+        setSuccess(`Successfully parsed! ${data.metadata.total_questions} questions in ${data.metadata.total_sections} sections.`);
+        setStep(2);
+        
+        // Initialize form data
+        const initialData = {};
+        data.interview_structure.sections?.forEach(section => {
+          section.elements?.forEach(element => {
+            if (element.element_type === 'question') {
+              if (element.question_type === 'fields') {
+                element.fields?.forEach(field => {
+                  initialData[field.name] = field.field_type === 'checkbox' ? false : '';
+                });
+              } else {
+                initialData[element.field_name] = element.question_type === 'checkbox' ? false : '';
+              }
+            }
+          });
         });
-      });
-      setFormData(initialData);
+        setFormData(initialData);
+      } else {
+        throw new Error(data.error || 'Unknown error occurred');
+      }
 
     } catch (err) {
-      console.error('Full error:', err);
+      console.error('Parse error:', err);
       setError(`Failed to parse PDF: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFieldChange = (fieldId, value) => {
+  const shouldShowElement = (element) => {
+    if (!element.conditional_on) return true;
+    return formData[element.conditional_on] === element.conditional_value;
+  };
+
+  const handleFieldChange = (fieldName, value) => {
     setFormData(prev => ({
       ...prev,
-      [fieldId]: value
+      [fieldName]: value
     }));
   };
 
-  const shouldShowField = (field) => {
-    if (!field.conditionalOn) return true;
-    return formData[field.conditionalOn] === field.conditionalValue;
+  const exportJSON = () => {
+    if (!formStructure) return;
+    
+    const dataStr = JSON.stringify(formStructure, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${formStructure.interview_name || 'form'}_structure.json`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   };
 
+  const exportFormData = () => {
+    const dataStr = JSON.stringify(formData, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'form-data.json';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
+
+  const saveAsDraft = async () => {
+    console.log('saveAsDraft called', { formStructure });
+    if (!formStructure) {
+      console.log('No formStructure, returning');
+      return;
+    }
+    
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    
+    try {
+      console.log('Sending save request...');
+      const response = await fetch('/api/application-types/from-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formStructure.interview_name || 'Parsed Form',
+          description: formStructure.description || 'Imported from PDF',
+          sections: formStructure.sections,
+          status: 'Draft',
+          active: true
+        })
+      });
+      
+      console.log('Response received:', response.status, response.ok);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Save failed:', errorData);
+        throw new Error(errorData.error || 'Failed to save form');
+      }
+      
+      const result = await response.json();
+      console.log('Save successful:', result);
+      
+      // Close parser and return to Form Editor
+      if (onClose) {
+        console.log('Calling onClose');
+        onClose();
+      }
+      
+    } catch (err) {
+      console.error('Save error:', err);
+      setError(`Failed to save: ${err.message}`);
+      setLoading(false);
+    }
+  };
+
+  // Section management
   const addSection = () => {
     const newSection = {
-      id: `sec_${Date.now()}`,
       title: "New Section",
-      instructions: "",
-      fields: []
+      description: "",
+      elements: []
     };
     setFormStructure({
       ...formStructure,
@@ -198,214 +186,426 @@ Parse the entire form. Return ONLY the JSON.`
     });
   };
 
-  const deleteSection = (sectionId) => {
+  const deleteSection = (sectionIdx) => {
     if (!confirm('Delete this entire section?')) return;
-    setFormStructure({
-      ...formStructure,
-      sections: formStructure.sections.filter(s => s.id !== sectionId)
-    });
+    const newSections = formStructure.sections.filter((_, idx) => idx !== sectionIdx);
+    setFormStructure({ ...formStructure, sections: newSections });
   };
 
-  const updateSection = (sectionId, updates) => {
-    setFormStructure({
-      ...formStructure,
-      sections: formStructure.sections.map(s => 
-        s.id === sectionId ? { ...s, ...updates } : s
-      )
-    });
+  const updateSection = (sectionIdx, updates) => {
+    const newSections = [...formStructure.sections];
+    newSections[sectionIdx] = { ...newSections[sectionIdx], ...updates };
+    setFormStructure({ ...formStructure, sections: newSections });
   };
 
-  const addFieldToSection = (sectionId) => {
-    const section = formStructure.sections.find(s => s.id === sectionId);
-    const newField = {
-      id: `f_${Date.now()}`,
-      label: "New Field",
-      type: "text",
-      required: false,
-      placeholder: "",
-      options: [],
-      position: section.fields.length + 1,
-      conditionalOn: null,
-      conditionalValue: null,
-      helpText: ""
+  // Element management
+  const addElement = (sectionIdx, type = 'question') => {
+    const newElement = type === 'instruction_block' 
+      ? {
+          element_type: "instruction_block",
+          title: "New Instruction",
+          content: "Add your instructions here",
+          style: "info"
+        }
+      : {
+          element_type: "question",
+          question_text: "New Question",
+          question_type: "fields",
+          required: false,
+          conditional_on: null,
+          conditional_value: null,
+          fields: [{
+            name: `field_${Date.now()}`,
+            label: "New Field",
+            field_type: "text",
+            required: false
+          }]
+        };
+    
+    const newSections = [...formStructure.sections];
+    newSections[sectionIdx].elements.push(newElement);
+    setFormStructure({ ...formStructure, sections: newSections });
+  };
+
+  const deleteElement = (sectionIdx, elementIdx) => {
+    const newSections = [...formStructure.sections];
+    newSections[sectionIdx].elements = newSections[sectionIdx].elements.filter((_, idx) => idx !== elementIdx);
+    setFormStructure({ ...formStructure, sections: newSections });
+  };
+
+  const moveElementUp = (sectionIdx, elementIdx) => {
+    if (elementIdx === 0) return;
+    const newSections = [...formStructure.sections];
+    const elements = newSections[sectionIdx].elements;
+    [elements[elementIdx - 1], elements[elementIdx]] = [elements[elementIdx], elements[elementIdx - 1]];
+    setFormStructure({ ...formStructure, sections: newSections });
+  };
+
+  const moveElementDown = (sectionIdx, elementIdx) => {
+    const newSections = [...formStructure.sections];
+    const elements = newSections[sectionIdx].elements;
+    if (elementIdx >= elements.length - 1) return;
+    [elements[elementIdx], elements[elementIdx + 1]] = [elements[elementIdx + 1], elements[elementIdx]];
+    setFormStructure({ ...formStructure, sections: newSections });
+  };
+
+  const duplicateElement = (sectionIdx, elementIdx) => {
+    const newSections = [...formStructure.sections];
+    const element = newSections[sectionIdx].elements[elementIdx];
+    const duplicate = JSON.parse(JSON.stringify(element));
+    if (duplicate.question_text) duplicate.question_text += " (Copy)";
+    if (duplicate.title) duplicate.title += " (Copy)";
+    newSections[sectionIdx].elements.splice(elementIdx + 1, 0, duplicate);
+    setFormStructure({ ...formStructure, sections: newSections });
+  };
+
+  const updateElement = (sectionIdx, elementIdx, updates) => {
+    const newSections = [...formStructure.sections];
+    newSections[sectionIdx].elements[elementIdx] = {
+      ...newSections[sectionIdx].elements[elementIdx],
+      ...updates
     };
-    
-    section.fields.push(newField);
-    setFormStructure({...formStructure});
-    setFormData({...formData, [newField.id]: ''});
+    setFormStructure({ ...formStructure, sections: newSections });
   };
 
-  const deleteField = (sectionId, fieldId) => {
-    const section = formStructure.sections.find(s => s.id === sectionId);
-    section.fields = section.fields.filter(f => f.id !== fieldId);
-    setFormStructure({...formStructure});
-    
-    const newFormData = {...formData};
-    delete newFormData[fieldId];
-    setFormData(newFormData);
-  };
-
-  const updateField = (sectionId, fieldId, updates) => {
-    const section = formStructure.sections.find(s => s.id === sectionId);
-    section.fields = section.fields.map(f => 
-      f.id === fieldId ? { ...f, ...updates } : f
-    );
-    setFormStructure({...formStructure});
-  };
-
-  const moveFieldUp = (sectionId, fieldIndex) => {
-    if (fieldIndex === 0) return;
-    const section = formStructure.sections.find(s => s.id === sectionId);
-    const fields = section.fields;
-    [fields[fieldIndex - 1], fields[fieldIndex]] = [fields[fieldIndex], fields[fieldIndex - 1]];
-    setFormStructure({...formStructure});
-  };
-
-  const moveFieldDown = (sectionId, fieldIndex) => {
-    const section = formStructure.sections.find(s => s.id === sectionId);
-    if (fieldIndex >= section.fields.length - 1) return;
-    const fields = section.fields;
-    [fields[fieldIndex], fields[fieldIndex + 1]] = [fields[fieldIndex + 1], fields[fieldIndex]];
-    setFormStructure({...formStructure});
-  };
-
-  const duplicateField = (sectionId, fieldId) => {
-    const section = formStructure.sections.find(s => s.id === sectionId);
-    const field = section.fields.find(f => f.id === fieldId);
-    const newField = {
-      ...field,
-      id: `f_${Date.now()}`,
-      label: `${field.label} (Copy)`,
-      position: section.fields.length + 1
-    };
-    section.fields.push(newField);
-    setFormStructure({...formStructure});
-    setFormData({...formData, [newField.id]: ''});
-  };
-
-  const exportFormData = () => {
-    const dataStr = JSON.stringify(formData, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', 'form-data.json');
-    linkElement.click();
-  };
-
-  const exportFormStructure = () => {
-    const dataStr = JSON.stringify(formStructure, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', 'form-structure.json');
-    linkElement.click();
-  };
-
-  const importFormStructure = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const imported = JSON.parse(event.target.result);
-        setFormStructure(imported);
-        setStep(2);
-        
-        const initialData = {};
-        imported.sections.forEach(section => {
-          section.fields.forEach(field => {
-            initialData[field.id] = field.type === 'checkbox' ? false : '';
-          });
-        });
-        setFormData(initialData);
-      } catch (err) {
-        setError('Failed to import form structure. Invalid JSON file.');
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  const renderField = (field) => {
-    if (!shouldShowField(field)) return null;
-
-    const baseClasses = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent";
-    
-    switch (field.type) {
-      case 'textarea':
-        return (
-          <textarea
-            value={formData[field.id] || ''}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            placeholder={field.placeholder}
-            required={field.required && shouldShowField(field)}
-            className={`${baseClasses} h-32 resize-y`}
-          />
-        );
-      
-      case 'date':
-        return (
-          <input
-            type="date"
-            value={formData[field.id] || ''}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            required={field.required}
-            className={baseClasses}
-          />
-        );
-      
-      case 'file':
-        return (
-          <input
-            type="file"
-            onChange={(e) => handleFieldChange(field.id, e.target.files[0]?.name || '')}
-            required={field.required}
-            className={baseClasses}
-          />
-        );
-      
-      case 'checkbox':
-        return (
-          <input
-            type="checkbox"
-            checked={formData[field.id] || false}
-            onChange={(e) => handleFieldChange(field.id, e.target.checked)}
-            className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-          />
-        );
-      
-      case 'radio':
-        return (
-          <div className="space-y-2">
-            {field.options?.map(opt => (
-              <label key={opt} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name={field.id}
-                  value={opt}
-                  checked={formData[field.id] === opt}
-                  onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                  required={field.required}
-                  className="w-4 h-4 text-blue-600"
-                />
-                <span className="text-gray-700">{opt}</span>
-              </label>
-            ))}
-          </div>
-        );
-      
-      default:
-        return (
-          <input
-            type={field.type}
-            value={formData[field.id] || ''}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            placeholder={field.placeholder}
-            required={field.required}
-            className={baseClasses}
-          />
-        );
+  // Field management within questions
+  const addFieldToQuestion = (sectionIdx, elementIdx) => {
+    const newSections = [...formStructure.sections];
+    const element = newSections[sectionIdx].elements[elementIdx];
+    if (element.question_type === 'fields') {
+      element.fields.push({
+        name: `field_${Date.now()}`,
+        label: "New Field",
+        field_type: "text",
+        required: false
+      });
+      setFormStructure({ ...formStructure, sections: newSections });
     }
+  };
+
+  const deleteFieldFromQuestion = (sectionIdx, elementIdx, fieldIdx) => {
+    const newSections = [...formStructure.sections];
+    const element = newSections[sectionIdx].elements[elementIdx];
+    element.fields = element.fields.filter((_, idx) => idx !== fieldIdx);
+    setFormStructure({ ...formStructure, sections: newSections });
+  };
+
+  const updateFieldInQuestion = (sectionIdx, elementIdx, fieldIdx, updates) => {
+    const newSections = [...formStructure.sections];
+    const element = newSections[sectionIdx].elements[elementIdx];
+    element.fields[fieldIdx] = { ...element.fields[fieldIdx], ...updates };
+    setFormStructure({ ...formStructure, sections: newSections });
+  };
+
+  const renderQuestionField = (element) => {
+    if (element.question_type === 'yesno') {
+      return (
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name={element.field_name}
+              value="Yes"
+              checked={formData[element.field_name] === "Yes"}
+              onChange={(e) => handleFieldChange(element.field_name, e.target.value)}
+              className="w-4 h-4 text-blue-600"
+            />
+            <span className="text-gray-700">Yes</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name={element.field_name}
+              value="No"
+              checked={formData[element.field_name] === "No"}
+              onChange={(e) => handleFieldChange(element.field_name, e.target.value)}
+              className="w-4 h-4 text-blue-600"
+            />
+            <span className="text-gray-700">No</span>
+          </label>
+        </div>
+      );
+    }
+
+    if (element.question_type === 'choice') {
+      const isRadio = element.choice_type === 'radio';
+      const isCheckbox = element.choice_type === 'checkbox';
+      
+      return (
+        <div className="space-y-2">
+          {element.options?.map((option, idx) => (
+            <label key={idx} className="flex items-center gap-2 cursor-pointer">
+              <input
+                type={isRadio ? 'radio' : 'checkbox'}
+                name={element.field_name}
+                value={option}
+                checked={isRadio 
+                  ? formData[element.field_name] === option
+                  : (formData[element.field_name] || []).includes(option)
+                }
+                onChange={(e) => {
+                  if (isRadio) {
+                    handleFieldChange(element.field_name, e.target.value);
+                  } else {
+                    const currentValues = formData[element.field_name] || [];
+                    const newValues = e.target.checked
+                      ? [...currentValues, option]
+                      : currentValues.filter(v => v !== option);
+                    handleFieldChange(element.field_name, newValues);
+                  }
+                }}
+                className="w-4 h-4 text-blue-600"
+              />
+              <span className="text-gray-700">{option}</span>
+            </label>
+          ))}
+        </div>
+      );
+    }
+
+    if (element.question_type === 'fields') {
+      return (
+        <div className="space-y-4">
+          {element.fields?.map((field, idx) => (
+            <div key={idx}>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {field.label}
+                {field.required && <span className="text-red-500 ml-1">*</span>}
+              </label>
+              {field.field_type === 'textarea' ? (
+                <textarea
+                  value={formData[field.name] || ''}
+                  onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  rows="3"
+                />
+              ) : field.field_type === 'date' ? (
+                <input
+                  type="date"
+                  value={formData[field.name] || ''}
+                  onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              ) : field.field_type === 'tel' ? (
+                <input
+                  type="tel"
+                  value={formData[field.name] || ''}
+                  onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                  placeholder={field.placeholder}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              ) : field.field_type === 'email' ? (
+                <input
+                  type="email"
+                  value={formData[field.name] || ''}
+                  onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                  placeholder={field.placeholder}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              ) : (
+                <input
+                  type={field.field_type}
+                  value={formData[field.name] || ''}
+                  onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                  placeholder={field.placeholder}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              )}
+              {field.help_text && (
+                <p className="text-xs text-gray-500 mt-1">{field.help_text}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  const renderElementEditor = (sectionIdx, elementIdx, element) => {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold">
+              Edit {element.element_type === 'instruction_block' ? 'Instruction' : 'Question'}
+            </h3>
+            <button
+              onClick={() => setEditingElement(null)}
+              className="p-2 hover:bg-gray-100 rounded"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {element.element_type === 'instruction_block' ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Title</label>
+                <input
+                  type="text"
+                  value={element.title}
+                  onChange={(e) => updateElement(sectionIdx, elementIdx, { title: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Content</label>
+                <textarea
+                  value={element.content}
+                  onChange={(e) => updateElement(sectionIdx, elementIdx, { content: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                  rows="4"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Style</label>
+                <select
+                  value={element.style}
+                  onChange={(e) => updateElement(sectionIdx, elementIdx, { style: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                >
+                  <option value="info">Info (Blue)</option>
+                  <option value="warning">Warning (Orange)</option>
+                  <option value="alert">Alert (Red)</option>
+                </select>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Question Text</label>
+                <input
+                  type="text"
+                  value={element.question_text}
+                  onChange={(e) => updateElement(sectionIdx, elementIdx, { question_text: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Question Type</label>
+                  <select
+                    value={element.question_type}
+                    onChange={(e) => updateElement(sectionIdx, elementIdx, { question_type: e.target.value })}
+                    className="w-full px-3 py-2 border rounded"
+                  >
+                    <option value="fields">Multiple Fields</option>
+                    <option value="yesno">Yes/No</option>
+                    <option value="choice">Multiple Choice</option>
+                  </select>
+                </div>
+                <div className="flex items-center">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={element.required}
+                      onChange={(e) => updateElement(sectionIdx, elementIdx, { required: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm">Required</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Conditional On (field name)</label>
+                  <input
+                    type="text"
+                    value={element.conditional_on || ''}
+                    onChange={(e) => updateElement(sectionIdx, elementIdx, { conditional_on: e.target.value || null })}
+                    className="w-full px-3 py-2 border rounded"
+                    placeholder="e.g., convicted_felony"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Conditional Value</label>
+                  <input
+                    type="text"
+                    value={element.conditional_value || ''}
+                    onChange={(e) => updateElement(sectionIdx, elementIdx, { conditional_value: e.target.value || null })}
+                    className="w-full px-3 py-2 border rounded"
+                    placeholder="e.g., Yes"
+                  />
+                </div>
+              </div>
+
+              {element.question_type === 'fields' && (
+                <div className="border-t pt-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-medium">Fields</h4>
+                    <button
+                      onClick={() => addFieldToQuestion(sectionIdx, elementIdx)}
+                      className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm"
+                    >
+                      <Plus size={16} />
+                      Add Field
+                    </button>
+                  </div>
+                  
+                  {element.fields?.map((field, fieldIdx) => (
+                    <div key={fieldIdx} className="mb-3 p-3 bg-gray-50 rounded border">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-sm font-medium">Field {fieldIdx + 1}</span>
+                        <button
+                          onClick={() => deleteFieldFromQuestion(sectionIdx, elementIdx, fieldIdx)}
+                          className="text-red-600 hover:bg-red-50 p-1 rounded"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          value={field.label}
+                          onChange={(e) => updateFieldInQuestion(sectionIdx, elementIdx, fieldIdx, { label: e.target.value })}
+                          placeholder="Label"
+                          className="w-full px-2 py-1 border rounded text-sm"
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={field.name}
+                            onChange={(e) => updateFieldInQuestion(sectionIdx, elementIdx, fieldIdx, { name: e.target.value })}
+                            placeholder="Field name"
+                            className="w-full px-2 py-1 border rounded text-sm"
+                          />
+                          <select
+                            value={field.field_type}
+                            onChange={(e) => updateFieldInQuestion(sectionIdx, elementIdx, fieldIdx, { field_type: e.target.value })}
+                            className="w-full px-2 py-1 border rounded text-sm"
+                          >
+                            <option value="text">Text</option>
+                            <option value="email">Email</option>
+                            <option value="tel">Phone</option>
+                            <option value="date">Date</option>
+                            <option value="number">Number</option>
+                            <option value="textarea">Textarea</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex gap-2 mt-6">
+            <button
+              onClick={() => setEditingElement(null)}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -416,33 +616,14 @@ Parse the entire form. Return ONLY the JSON.`
             Smart PDF Form Parser
           </h1>
           <p className="text-gray-600">
-            Upload a PDF form to create an intelligent, conditional digital form
+            Upload a PDF form to extract fields with AI
           </p>
         </div>
 
-        {/* Step Indicator */}
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-4">
-            <div className={`flex items-center gap-2 ${step >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}>
-                1
-              </div>
-              <span className="font-medium">Upload PDF</span>
-            </div>
-            <div className="w-16 h-0.5 bg-gray-300"></div>
-            <div className={`flex items-center gap-2 ${step >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}>
-                2
-              </div>
-              <span className="font-medium">Fill Form</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Step 1: Upload PDF */}
+        {/* Step 1: Upload */}
         {step === 1 && (
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-blue-500 transition-colors">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-blue-500 transition-colors cursor-pointer">
               <input
                 type="file"
                 accept="application/pdf"
@@ -469,30 +650,24 @@ Parse the entire form. Return ONLY the JSON.`
                 </div>
                 
                 <button
-                  onClick={parseFormWithAI}
+                  onClick={parseWithBackend}
                   disabled={loading}
                   className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                 >
                   <FileText size={20} />
-                  {loading ? 'Parsing Form...' : 'Parse Smart Form'}
+                  {loading ? 'Parsing with AI...' : 'Parse PDF Form'}
                 </button>
               </div>
             )}
 
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <p className="text-sm text-gray-600 mb-3">Or import a saved form structure:</p>
-              <input
-                type="file"
-                accept="application/json"
-                onChange={importFormStructure}
-                className="hidden"
-                id="import-structure"
-              />
-              <label htmlFor="import-structure" className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                <Code size={18} />
-                Import Form Structure (JSON)
-              </label>
-            </div>
+            {success && (
+              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-start gap-2 text-green-700">
+                  <CheckCircle size={20} className="flex-shrink-0 mt-0.5" />
+                  <p>{success}</p>
+                </div>
+              </div>
+            )}
 
             {error && (
               <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -505,14 +680,19 @@ Parse the entire form. Return ONLY the JSON.`
           </div>
         )}
 
-        {/* Step 2: Smart Form */}
+        {/* Step 2: Edit & Preview */}
         {step === 2 && formStructure && (
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow-lg p-8">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">
-                  {formStructure.title || 'Application Form'}
-                </h2>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    {formStructure.interview_name || 'Application Form'}
+                  </h2>
+                  <p className="text-gray-600 mt-1">
+                    {formStructure.total_questions} questions • {formStructure.sections?.length} sections
+                  </p>
+                </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setEditMode(!editMode)}
@@ -526,40 +706,46 @@ Parse the entire form. Return ONLY the JSON.`
                     {editMode ? 'Done Editing' : 'Edit Form'}
                   </button>
                   <button
-                    onClick={exportFormStructure}
-                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    onClick={saveAsDraft}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Save size={18} />
+                    {loading ? 'Saving...' : 'Save as Draft'}
+                  </button>
+                  <button
+                    onClick={exportJSON}
+                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                   >
                     <Code size={18} />
-                    Export Structure
+                    Structure
                   </button>
                   <button
                     onClick={exportFormData}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                   >
                     <Download size={18} />
-                    Export Data
+                    Data
                   </button>
                 </div>
               </div>
 
-              {/* Render Sections */}
-              {formStructure.sections.map((section, sectionIndex) => (
-                <div key={section.id} className="mb-8 last:mb-0 border-2 border-gray-200 rounded-lg p-6">
+              {/* Sections */}
+              {formStructure.sections?.map((section, sectionIdx) => (
+                <div key={sectionIdx} className="mb-8 border-2 border-gray-200 rounded-lg p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
                       {editMode ? (
                         <input
                           type="text"
                           value={section.title}
-                          onChange={(e) => updateSection(section.id, { title: e.target.value })}
-                          className="text-xl font-bold text-gray-800 border-b-2 border-blue-600 bg-transparent w-full"
+                          onChange={(e) => updateSection(sectionIdx, { title: e.target.value })}
+                          className="text-xl font-bold border-b-2 border-blue-600 bg-transparent w-full px-2 py-1"
                         />
                       ) : (
-                        section.title && (
-                          <h3 className="text-xl font-bold text-gray-800 mb-3 pb-2 border-b-2 border-blue-600">
-                            {section.title}
-                          </h3>
-                        )
+                        <h3 className="text-xl font-bold text-gray-800 border-b-2 border-blue-600 pb-2">
+                          {section.title}
+                        </h3>
                       )}
                     </div>
                     
@@ -567,16 +753,16 @@ Parse the entire form. Return ONLY the JSON.`
                       <div className="flex gap-2 ml-4">
                         <button
                           onClick={() => {
-                            const inst = prompt('Edit section instructions:', section.instructions);
-                            if (inst !== null) updateSection(section.id, { instructions: inst });
+                            const desc = prompt('Section description:', section.description || '');
+                            if (desc !== null) updateSection(sectionIdx, { description: desc });
                           }}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-                          title="Edit instructions"
+                          title="Edit description"
                         >
                           <Settings size={18} />
                         </button>
                         <button
-                          onClick={() => deleteSection(section.id)}
+                          onClick={() => deleteSection(sectionIdx)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded"
                           title="Delete section"
                         >
@@ -585,194 +771,145 @@ Parse the entire form. Return ONLY the JSON.`
                       </div>
                     )}
                   </div>
-                  
-                  {section.instructions && (
-                    <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-600 rounded">
-                      <div className="flex items-start gap-2">
-                        <Info size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
-                        {editMode ? (
-                          <textarea
-                            value={section.instructions}
-                            onChange={(e) => updateSection(section.id, { instructions: e.target.value })}
-                            className="text-sm text-gray-700 w-full bg-white p-2 rounded border"
-                            rows="3"
-                          />
-                        ) : (
-                          <p className="text-sm text-gray-700 whitespace-pre-line">
-                            {section.instructions}
-                          </p>
-                        )}
-                      </div>
+
+                  {section.description && (
+                    <p className="text-sm text-gray-600 mb-4">{section.description}</p>
+                  )}
+
+                  {section.repeating && (
+                    <div className="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-500 text-sm">
+                      <strong>Repeating Section:</strong> Min {section.min_entries || 1}, Max {section.max_entries || 'unlimited'}
                     </div>
                   )}
 
-                  {/* Render Fields */}
+                  {/* Elements */}
                   <div className="space-y-6">
-                    {section.fields.map((field, fieldIndex) => {
-                      if (!shouldShowField(field) && !editMode) return null;
-                      
+                    {section.elements?.map((element, elemIdx) => {
+                      if (!shouldShowElement(element) && !editMode) return null;
+
                       return (
-                        <div key={field.id} className={`space-y-2 ${!shouldShowField(field) && editMode ? 'opacity-50 border-l-4 border-yellow-500 pl-4' : ''}`}>
-                          {editMode && editingField === field.id ? (
-                            // Field Editor
-                            <div className="bg-gray-50 p-4 rounded-lg border-2 border-blue-500">
-                              <div className="space-y-3">
-                                <div>
-                                  <label className="block text-sm font-medium mb-1">Label</label>
-                                  <input
-                                    type="text"
-                                    value={field.label}
-                                    onChange={(e) => updateField(section.id, field.id, { label: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded"
-                                  />
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div>
-                                    <label className="block text-sm font-medium mb-1">Type</label>
-                                    <select
-                                      value={field.type}
-                                      onChange={(e) => updateField(section.id, field.id, { type: e.target.value })}
-                                      className="w-full px-3 py-2 border rounded"
-                                    >
-                                      <option value="text">Text</option>
-                                      <option value="email">Email</option>
-                                      <option value="tel">Phone</option>
-                                      <option value="date">Date</option>
-                                      <option value="number">Number</option>
-                                      <option value="textarea">Textarea</option>
-                                      <option value="radio">Radio</option>
-                                      <option value="checkbox">Checkbox</option>
-                                      <option value="file">File</option>
-                                    </select>
-                                  </div>
-                                  <div className="flex items-center gap-4">
-                                    <label className="flex items-center gap-2">
-                                      <input
-                                        type="checkbox"
-                                        checked={field.required}
-                                        onChange={(e) => updateField(section.id, field.id, { required: e.target.checked })}
-                                        className="w-4 h-4"
-                                      />
-                                      <span className="text-sm">Required</span>
-                                    </label>
-                                  </div>
-                                </div>
-                                {(field.type === 'radio' || field.type === 'select') && (
-                                  <div>
-                                    <label className="block text-sm font-medium mb-1">Options (comma separated)</label>
-                                    <input
-                                      type="text"
-                                      value={field.options?.join(', ') || ''}
-                                      onChange={(e) => updateField(section.id, field.id, { 
-                                        options: e.target.value.split(',').map(o => o.trim()).filter(Boolean)
-                                      })}
-                                      className="w-full px-3 py-2 border rounded"
-                                      placeholder="Option 1, Option 2, Option 3"
-                                    />
-                                  </div>
-                                )}
-                                <div>
-                                  <label className="block text-sm font-medium mb-1">Help Text</label>
-                                  <input
-                                    type="text"
-                                    value={field.helpText || ''}
-                                    onChange={(e) => updateField(section.id, field.id, { helpText: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded"
-                                  />
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div>
-                                    <label className="block text-sm font-medium mb-1">Conditional On Field ID</label>
-                                    <input
-                                      type="text"
-                                      value={field.conditionalOn || ''}
-                                      onChange={(e) => updateField(section.id, field.id, { conditionalOn: e.target.value || null })}
-                                      className="w-full px-3 py-2 border rounded"
-                                      placeholder="f_10"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium mb-1">Conditional Value</label>
-                                    <input
-                                      type="text"
-                                      value={field.conditionalValue || ''}
-                                      onChange={(e) => updateField(section.id, field.id, { conditionalValue: e.target.value || null })}
-                                      className="w-full px-3 py-2 border rounded"
-                                      placeholder="Yes"
-                                    />
-                                  </div>
-                                </div>
-                                <button
-                                  onClick={() => setEditingField(null)}
-                                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                                >
-                                  <Save size={16} />
-                                  Done Editing
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            // Field Display/Input
+                        <div key={elemIdx} className={`${!shouldShowElement(element) && editMode ? 'opacity-50 border-l-4 border-yellow-500 pl-4' : ''}`}>
+                          {element.element_type === 'instruction_block' && (
                             <div className="flex items-start gap-3">
                               {editMode && (
-                                <div className="flex flex-col gap-1 pt-6">
+                                <div className="flex flex-col gap-1 pt-2">
                                   <button
-                                    onClick={() => moveFieldUp(section.id, fieldIndex)}
-                                    disabled={fieldIndex === 0}
+                                    onClick={() => moveElementUp(sectionIdx, elemIdx)}
+                                    disabled={elemIdx === 0}
                                     className="p-1 text-gray-600 hover:text-blue-600 disabled:opacity-30"
                                   >
                                     <ArrowUp size={18} />
                                   </button>
                                   <GripVertical size={18} className="text-gray-400" />
                                   <button
-                                    onClick={() => moveFieldDown(section.id, fieldIndex)}
-                                    disabled={fieldIndex >= section.fields.length - 1}
+                                    onClick={() => moveElementDown(sectionIdx, elemIdx)}
+                                    disabled={elemIdx >= section.elements.length - 1}
                                     className="p-1 text-gray-600 hover:text-blue-600 disabled:opacity-30"
                                   >
                                     <ArrowDown size={18} />
                                   </button>
                                 </div>
                               )}
-                              
+
                               <div className="flex-1">
-                                <label className="block">
-                                  <span className="text-gray-700 font-medium">
-                                    {editMode && <span className="text-gray-400 text-xs mr-2">ID: {field.id}</span>}
-                                    {field.label}
-                                    {field.required && shouldShowField(field) && (
-                                      <span className="text-red-500 ml-1">*</span>
-                                    )}
-                                  </span>
-                                  {field.helpText && (
-                                    <p className="text-sm text-gray-500 mt-1">{field.helpText}</p>
-                                  )}
-                                </label>
-                                {!editMode && renderField(field)}
-                                {field.conditionalOn && (
-                                  <p className="text-xs text-blue-600 italic mt-1">
-                                    Shows when {field.conditionalOn} = "{field.conditionalValue}"
-                                  </p>
-                                )}
+                                <div className={`p-4 rounded border-l-4 ${
+                                  element.style === 'warning' ? 'bg-orange-50 border-orange-500' :
+                                  element.style === 'alert' ? 'bg-red-50 border-red-500' :
+                                  'bg-blue-50 border-blue-500'
+                                }`}>
+                                  <div className="flex items-start gap-2">
+                                    <Info size={16} className="mt-0.5 flex-shrink-0" />
+                                    <div className="flex-1">
+                                      <strong className="text-sm">{element.title}</strong>
+                                      <p className="text-sm mt-1">{element.content}</p>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
 
                               {editMode && (
-                                <div className="flex gap-1 pt-6">
+                                <div className="flex gap-1 pt-2">
                                   <button
-                                    onClick={() => setEditingField(field.id)}
+                                    onClick={() => setEditingElement({ sectionIdx, elemIdx })}
                                     className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-                                    title="Edit field"
+                                    title="Edit"
                                   >
                                     <Settings size={18} />
                                   </button>
                                   <button
-                                    onClick={() => duplicateField(section.id, field.id)}
+                                    onClick={() => duplicateElement(sectionIdx, elemIdx)}
                                     className="p-2 text-green-600 hover:bg-green-50 rounded"
                                     title="Duplicate"
                                   >
                                     <Copy size={18} />
                                   </button>
                                   <button
-                                    onClick={() => deleteField(section.id, field.id)}
+                                    onClick={() => deleteElement(sectionIdx, elemIdx)}
+                                    className="p-2 text-red-600 hover:bg-red-50 rounded"
+                                    title="Delete"
+                                  >
+                                    <Trash2 size={18} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {element.element_type === 'question' && (
+                            <div className="flex items-start gap-3">
+                              {editMode && (
+                                <div className="flex flex-col gap-1 pt-6">
+                                  <button
+                                    onClick={() => moveElementUp(sectionIdx, elemIdx)}
+                                    disabled={elemIdx === 0}
+                                    className="p-1 text-gray-600 hover:text-blue-600 disabled:opacity-30"
+                                  >
+                                    <ArrowUp size={18} />
+                                  </button>
+                                  <GripVertical size={18} className="text-gray-400" />
+                                  <button
+                                    onClick={() => moveElementDown(sectionIdx, elemIdx)}
+                                    disabled={elemIdx >= section.elements.length - 1}
+                                    className="p-1 text-gray-600 hover:text-blue-600 disabled:opacity-30"
+                                  >
+                                    <ArrowDown size={18} />
+                                  </button>
+                                </div>
+                              )}
+
+                              <div className="flex-1">
+                                <p className="font-medium text-gray-800 mb-2">
+                                  {element.question_text}
+                                  {element.required && <span className="text-red-500 ml-1">*</span>}
+                                </p>
+
+                                {element.conditional_on && (
+                                  <p className="text-xs text-blue-600 italic mb-2">
+                                    ⚡ Shows when {element.conditional_on} = "{element.conditional_value}"
+                                  </p>
+                                )}
+
+                                {!editMode && renderQuestionField(element)}
+                              </div>
+
+                              {editMode && (
+                                <div className="flex gap-1 pt-6">
+                                  <button
+                                    onClick={() => setEditingElement({ sectionIdx, elemIdx })}
+                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                                    title="Edit"
+                                  >
+                                    <Settings size={18} />
+                                  </button>
+                                  <button
+                                    onClick={() => duplicateElement(sectionIdx, elemIdx)}
+                                    className="p-2 text-green-600 hover:bg-green-50 rounded"
+                                    title="Duplicate"
+                                  >
+                                    <Copy size={18} />
+                                  </button>
+                                  <button
+                                    onClick={() => deleteElement(sectionIdx, elemIdx)}
                                     className="p-2 text-red-600 hover:bg-red-50 rounded"
                                     title="Delete"
                                   >
@@ -788,13 +925,22 @@ Parse the entire form. Return ONLY the JSON.`
                   </div>
 
                   {editMode && (
-                    <button
-                      onClick={() => addFieldToSection(section.id)}
-                      className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors w-full justify-center"
-                    >
-                      <Plus size={18} />
-                      Add Field to This Section
-                    </button>
+                    <div className="mt-4 flex gap-2">
+                      <button
+                        onClick={() => addElement(sectionIdx, 'question')}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
+                      >
+                        <Plus size={18} />
+                        Add Question
+                      </button>
+                      <button
+                        onClick={() => addElement(sectionIdx, 'instruction_block')}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200"
+                      >
+                        <Plus size={18} />
+                        Add Instruction
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}
@@ -802,7 +948,7 @@ Parse the entire form. Return ONLY the JSON.`
               {editMode && (
                 <button
                   onClick={addSection}
-                  className="mt-4 flex items-center gap-2 px-6 py-3 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors w-full justify-center font-medium"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 font-medium"
                 >
                   <Plus size={20} />
                   Add New Section
@@ -817,14 +963,23 @@ Parse the entire form. Return ONLY the JSON.`
                 setFormStructure(null);
                 setFormData({});
                 setEditMode(false);
-                setEditingField(null);
+                setEditingElement(null);
               }}
-              className="w-full py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+              className="w-full py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300"
             >
               Upload New PDF
             </button>
           </div>
         )}
+
+        {/* Element Editor Modal */}
+        {editingElement && formStructure.sections[editingElement.sectionIdx]?.elements[editingElement.elemIdx] && 
+          renderElementEditor(
+            editingElement.sectionIdx, 
+            editingElement.elemIdx, 
+            formStructure.sections[editingElement.sectionIdx].elements[editingElement.elemIdx]
+          )
+        }
       </div>
     </div>
   );

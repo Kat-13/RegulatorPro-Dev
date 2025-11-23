@@ -2018,6 +2018,41 @@ def create_application_type():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/application-types/from-pdf', methods=['POST'])
+def create_application_type_from_pdf():
+    """Create a new application type from PDF parser (sections format)"""
+    try:
+        data = request.json
+        
+        # Validate required fields
+        if not data.get('name'):
+            return jsonify({'error': 'Application name is required'}), 400
+        
+        if not data.get('sections'):
+            return jsonify({'error': 'Sections data is required'}), 400
+        
+        # Create application type with sections format
+        app_type = ApplicationType(
+            name=data.get('name'),
+            description=data.get('description', 'Imported from PDF'),
+            sections=json.dumps(data['sections']) if isinstance(data['sections'], (list, dict)) else data['sections'],
+            status=data.get('status', 'Draft'),
+            active=data.get('active', False)
+        )
+        
+        db.session.add(app_type)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Application type created from PDF successfully',
+            'applicationType': app_type.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/application-types/<int:type_id>', methods=['PUT'])
 def update_application_type(type_id):
     """Update an application type's form definition"""
@@ -3555,38 +3590,43 @@ def extract_pdf():
 @app.route('/api/parse-pdf', methods=['POST'])
 def parse_pdf():
     """
-    Parse PDF form and return interview structure (without saving to database)
-    This is for the Smart PDF Form Parser UI
+    Parse PDF form and return interview structure
+    Frontend sends PDF as multipart/form-data
     """
     try:
+        # Check if file is present
         if 'file' not in request.files:
             return jsonify({'error': 'No file uploaded'}), 400
         
         file = request.files['file']
+        
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
         
-        # Get options
-        enable_smart = request.form.get('enable_smart_features', 'true').lower() == 'true'
+        if not file.filename.endswith('.pdf'):
+            return jsonify({'error': 'Only PDF files are allowed'}), 400
         
-        # Save uploaded file temporarily
+        # Save the uploaded file temporarily
         import tempfile
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
             file.save(tmp_file.name)
             tmp_path = tmp_file.name
         
         try:
-            # Extract interview structure using enhanced parser
-            from pdf_interview_extractor import EnhancedPDFInterviewExtractor
-            extractor = EnhancedPDFInterviewExtractor(db=db, FieldLibrary=FieldLibrary)
-            result = extractor.extract_interview_from_pdf(tmp_path, enable_smart_features=enable_smart)
+            # Use your enhanced PDF parser
+            from pdf_interview_extractor import PDFInterviewExtractor
             
+            extractor = PDFInterviewExtractor(db=db, FieldLibrary=FieldLibrary)
+            
+            # enable_smart_features=True gives you conditional logic, etc.
+            result = extractor.extract_interview_from_pdf(tmp_path, enable_smart_features=True)
+            
+            from werkzeug.utils import secure_filename
             return jsonify({
                 'success': True,
                 'interview_structure': result,
                 'metadata': {
-                    'filename': file.filename,
-                    'smart_features_enabled': enable_smart,
+                    'filename': secure_filename(file.filename),
                     'total_sections': len(result.get('sections', [])),
                     'total_questions': result.get('total_questions', 0),
                     'estimated_time': result.get('estimated_time_minutes', 0)
@@ -3594,13 +3634,12 @@ def parse_pdf():
             })
             
         finally:
-            # Clean up temporary file
+            # Clean up temp file
             import os
             if os.path.exists(tmp_path):
-                os.unlink(tmp_path)
-    
+                os.remove(tmp_path)
+        
     except Exception as e:
-        app.logger.error(f"[PARSE_PDF] Error: {str(e)}")
         return jsonify({
             'success': False,
             'error': str(e)
