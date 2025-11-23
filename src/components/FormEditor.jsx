@@ -5,7 +5,7 @@ import ConditionalLogicBuilder from './ConditionalLogicBuilder'
 import FieldLibrarySidebar from './FieldLibrarySidebar'
 import KanbanBoard from './KanbanBoard'
 import ApplicationTypesKanban from './ApplicationTypesKanban'
-import SmartFormParser from './SmartFormParser'
+import SmartFormParser from './SmartFormParserV2'
 
 const API_BASE_URL = '/api'
 

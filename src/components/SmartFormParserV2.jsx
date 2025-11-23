@@ -143,26 +143,23 @@ function SmartFormParserV2({ onClose }) {
         reader.readAsDataURL(pdfFile);
       });
 
-      // Call Anthropic API
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      // Call OpenAI API
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': process.env.REACT_APP_ANTHROPIC_API_KEY || '',
-          'anthropic-version': '2023-06-01'
+          'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY || ''}`
         },
         body: JSON.stringify({
-          model: 'claude-3-5-sonnet-20241022',
+          model: 'gpt-4o',
           max_tokens: 16000,
           messages: [{
             role: 'user',
             content: [
               {
-                type: 'document',
-                source: {
-                  type: 'base64',
-                  media_type: 'application/pdf',
-                  data: base64
+                type: 'image_url',
+                image_url: {
+                  url: `data:application/pdf;base64,${base64}`
                 }
               },
               {
@@ -222,18 +219,18 @@ Return ONLY the JSON object.`
       const data = await response.json();
 
       // Check for truncation
-      if (data.stop_reason === 'max_tokens') {
+      if (data.choices[0].finish_reason === 'length') {
         throw new Error('Response was truncated - form too complex. Try a simpler form or split into sections.');
       }
 
       // Extract text content
-      const textContent = data.content.find(c => c.type === 'text');
+      const textContent = data.choices[0].message.content;
       if (!textContent) {
         throw new Error('No text content in AI response');
       }
 
       // Clean and parse
-      const cleanedJSON = cleanAIResponse(textContent.text);
+      const cleanedJSON = cleanAIResponse(textContent);
       const parsedForm = JSON.parse(cleanedJSON);
 
       // Validate
