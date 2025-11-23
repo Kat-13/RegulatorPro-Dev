@@ -32,6 +32,50 @@ const FIELD_TYPES = [
   { value: 'file', label: 'File Upload' }
 ];
 
+// Normalize sections to ensure consistent data structure
+const normalizeSections = (sections) => {
+  if (!sections || !Array.isArray(sections)) {
+    return [];
+  }
+
+  return sections.map(section => {
+    // Convert questions array to elements array if needed
+    const elements = section.elements || section.questions || [];
+
+    // Normalize each element
+    const normalizedElements = elements.map(element => {
+      // Determine if this is an instruction block or question
+      const isInstructionBlock = element.element_type === 'instruction_block';
+
+      if (isInstructionBlock) {
+        // Instruction block - ensure required properties
+        return {
+          element_type: 'instruction_block',
+          title: element.title || '',
+          content: element.content || '',
+          style: element.style || 'info'
+        };
+      } else {
+        // Question - ensure required properties
+        return {
+          element_type: element.element_type || 'question',
+          question_text: element.question_text || '',
+          question_type: element.question_type || 'fields',
+          fields: Array.isArray(element.fields) ? element.fields : [],
+          conditional_logic: element.conditional_logic || null
+        };
+      }
+    });
+
+    // Return normalized section with elements array (not questions)
+    return {
+      title: section.title || '',
+      description: section.description || '',
+      elements: normalizedElements
+    };
+  });
+};
+
 function AIInterviewEditor({ interviewData: initialData, applicationType, onClose, onSave }) {
   const [interviewData, setInterviewData] = useState(null);
   const [expandedSections, setExpandedSections] = useState({});
@@ -46,7 +90,7 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
         id: applicationType?.id,
         name: initialData.interview_name || '',
         description: initialData.description || '',
-        sections: initialData.sections || []
+        sections: normalizeSections(initialData.sections || [])
       });
     } else if (applicationType) {
       loadInterviewData();
@@ -61,15 +105,18 @@ function AIInterviewEditor({ interviewData: initialData, applicationType, onClos
         sections = JSON.parse(sections);
       }
 
+      // Normalize sections to ensure consistent structure
+      const normalizedSections = normalizeSections(sections || []);
+
       setInterviewData({
         id: applicationType.id,
         name: applicationType.name || '',
         description: applicationType.description || '',
-        sections: sections || []
+        sections: normalizedSections
       });
 
       // Expand first section by default
-      if (sections && sections.length > 0) {
+      if (normalizedSections && normalizedSections.length > 0) {
         setExpandedSections({ 0: true });
       }
     } catch (error) {
