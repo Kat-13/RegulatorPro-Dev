@@ -1914,8 +1914,35 @@ def create_application_type():
     """Create a new application type from parsed document"""
     try:
         from purpose_matcher import PurposeMatcher
+        from format_converter import convert_sections_to_fields
         
         data = request.json
+        
+        # Check if this is NEW format (sections) or OLD format (fields)
+        if 'sections' in data:
+            # NEW FORMAT - Store sections directly, set parser version
+            app_type = ApplicationType(
+                name=data.get('name'),
+                description=data.get('description'),
+                sections=json.dumps(data['sections']),
+                parser_version=data.get('parserVersion', 'Manual_v2'),
+                status=data.get('status', 'draft'),
+                active=data.get('active', True),
+                base_fee=data.get('baseFee', 0.0),
+                late_fee_percentage=data.get('lateFeePercentage', 0.0),
+                renewal_window_days=data.get('renewalWindowDays', 30),
+                expiration_months=data.get('expirationMonths', 12)
+            )
+            db.session.add(app_type)
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Application type created successfully',
+                'applicationType': app_type.to_dict()
+            }), 201
+        
+        # OLD FORMAT - Process with UFL matching
         fields = data.get('fields', [])
         
         # Process fields using purpose matcher
@@ -2394,12 +2421,18 @@ def delete_application_type(type_id):
 def import_application_types():
     """Import multiple application types from parsed document (bulk)"""
     try:
+        from format_converter import convert_fields_to_sections
+        
         data = request.json
         application_types = data.get('applicationTypes', [])
         metadata = data.get('metadata', {})
         
         imported = []
         for app_data in application_types:
+            # Convert fields to sections format
+            fields = app_data.get('fields', [])
+            sections = convert_fields_to_sections(fields)
+            
             app_type = ApplicationType(
                 name=app_data.get('applicationType'),
                 description=app_data.get('description', ''),
@@ -2407,11 +2440,12 @@ def import_application_types():
                 duration=app_data.get('duration'),
                 license_number_format=app_data.get('licenseNumberFormat'),
                 source_document=metadata.get('documentSource'),
-                parser_version=metadata.get('parserVersion'),
-                form_definition=json.dumps(app_data.get('fields', [])),
+                parser_version='Bulk_Import_v2',  # Mark as new format
+                sections=json.dumps(sections),  # NEW FORMAT
                 workflow_definition=json.dumps(app_data.get('workflow', {})),
                 fees_definition=json.dumps(app_data.get('fees', {})),
-                active=True
+                active=True,
+                status='draft'
             )
             db.session.add(app_type)
             imported.append(app_type)
