@@ -3687,7 +3687,7 @@ def parse_pdf_v2():
     Frontend sends PDF as multipart/form-data
     Returns: { title, sections: [ { id, title, instructions, fields: [] } ] }
     """
-    import requests
+    from openai import OpenAI
     
     try:
         # Check if file is present
@@ -3706,34 +3706,25 @@ def parse_pdf_v2():
         file_content = file.read()
         base64_pdf = base64.b64encode(file_content).decode('utf-8')
         
-        # Get OpenAI API key and base URL from environment
-        openai_api_key = os.environ.get('OPENAI_API_KEY')
-        openai_base_url = os.environ.get('OPENAI_BASE_URL', 'https://api.openai.com/v1')
-        if not openai_api_key:
-            return jsonify({'error': 'OpenAI API key not configured'}), 500
+        # Initialize OpenAI client (auto-configured from environment)
+        client = OpenAI()
         
-        # Call OpenAI API (via Manus proxy if configured)
-        response = requests.post(
-            f'{openai_base_url}/chat/completions',
-            headers={
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {openai_api_key}'
-            },
-            json={
-                'model': 'gpt-4o',
-                'max_tokens': 16000,
-                'messages': [{
-                    'role': 'user',
-                    'content': [
-                        {
-                            'type': 'image_url',
-                            'image_url': {
-                                'url': f'data:application/pdf;base64,{base64_pdf}'
-                            }
-                        },
-                        {
-                            'type': 'text',
-                            'text': '''Parse this licensing board PDF form into a structured JSON schema.
+        # Call OpenAI API using client library
+        response = client.chat.completions.create(
+            model='gpt-4o',
+            max_tokens=16000,
+            messages=[{
+                'role': 'user',
+                'content': [
+                    {
+                        'type': 'image_url',
+                        'image_url': {
+                            'url': f'data:application/pdf;base64,{base64_pdf}'
+                        }
+                    },
+                    {
+                        'type': 'text',
+                        'text': '''Parse this licensing board PDF form into a structured JSON schema.
 
 STRICT RULES:
 1. Return ONLY valid JSON, no markdown, no extra text
@@ -3774,29 +3765,19 @@ STRICT RULES:
 11. If a field shows/hides based on another field, set conditionalOn to that field's id and conditionalValue to the trigger value
 
 Return ONLY the JSON object.'''
-                        }
-                    ]
-                }]
-            },
-            timeout=60
+                    }
+                ]
+            }]
         )
         
-        if not response.ok:
-            error_data = response.json()
-            return jsonify({
-                'error': f"OpenAI API error: {error_data.get('error', {}).get('message', response.text)}"
-            }), response.status_code
-        
-        data = response.json()
-        
         # Check for truncation
-        if data['choices'][0]['finish_reason'] == 'length':
+        if response.choices[0].finish_reason == 'length':
             return jsonify({
                 'error': 'Response was truncated - form too complex. Try a simpler form or split into sections.'
             }), 400
         
         # Extract text content
-        text_content = data['choices'][0]['message']['content']
+        text_content = response.choices[0].message.content
         if not text_content:
             return jsonify({'error': 'No text content in AI response'}), 500
         
@@ -3839,10 +3820,6 @@ Return ONLY the JSON object.'''
             }
         })
         
-    except requests.exceptions.Timeout:
-        return jsonify({'error': 'OpenAI API request timed out'}), 504
-    except requests.exceptions.RequestException as e:
-        return jsonify({'error': f'OpenAI API request failed: {str(e)}'}), 500
     except Exception as e:
         return jsonify({
             'success': False,
