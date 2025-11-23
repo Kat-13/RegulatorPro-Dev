@@ -207,7 +207,7 @@ STRICT RULES:
 Return ONLY the JSON object.`
               }
             ]
-          })
+          }]
         })
       });
 
