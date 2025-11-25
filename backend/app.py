@@ -3751,7 +3751,7 @@ STRICT RULES:
         {
           "id": "f_1",
           "label": "Field Label",
-          "type": "text|email|tel|date|number|textarea|radio|checkbox|file",
+          "type": "text|email|tel|date|number|textarea|radio|checkbox|file|signature",
           "required": true|false,
           "placeholder": "optional placeholder",
           "options": ["Option 1", "Option 2"],
@@ -3767,7 +3767,7 @@ STRICT RULES:
 
 3. Section IDs: "sec_1", "sec_2", etc.
 4. Field IDs: "f_1", "f_2", etc. (globally unique across all sections)
-5. Field types: ONLY use: text, email, tel, date, number, textarea, radio, checkbox, file
+5. Field types: ONLY use: text, email, tel, date, number, textarea, radio, checkbox, file, signature
 6. Radio fields MUST have options array
 7. Checkbox fields are boolean (no options)
 8. Instructions go in section.instructions, NOT as a field

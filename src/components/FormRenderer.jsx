@@ -203,6 +203,21 @@ const FormRenderer = ({ formStructure, onSubmit, onCancel }) => {
           />
         );
       
+      case 'signature':
+        return (
+          <div className="signature-field">
+            <input
+              type="text"
+              {...commonProps}
+              placeholder={field.placeholder || 'Type your full name to sign electronically'}
+              className={`form-input signature-input ${hasError ? 'error' : ''}`}
+            />
+            <div className="signature-note">
+              By typing your name above, you are providing an electronic signature.
+            </div>
+          </div>
+        );
+      
       default:
         return (
           <input

@@ -13,7 +13,7 @@ import './FormStructureEditor.css';
  */
 
 const FIELD_TYPES = [
-  'text', 'email', 'tel', 'date', 'number', 'textarea', 'radio', 'checkbox', 'file'
+  'text', 'email', 'tel', 'date', 'number', 'textarea', 'radio', 'checkbox', 'file', 'signature'
 ];
 
 const FormStructureEditor = ({ formStructure, onSave, onCancel }) => {

@@ -23,7 +23,7 @@ import FormStructureEditor from './FormStructureEditor';
  */
 
 const FIELD_TYPES = [
-  'text', 'email', 'tel', 'date', 'number', 'textarea', 'radio', 'checkbox', 'file'
+  'text', 'email', 'tel', 'date', 'number', 'textarea', 'radio', 'checkbox', 'file', 'signature'
 ];
 
 function SmartFormParserV2({ onClose }) {
