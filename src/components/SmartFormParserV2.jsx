@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Upload, Download, Edit3, Eye, FileText, X } from 'lucide-react';
+import FormRenderer from './FormRenderer';
 
 /**
  * SmartFormParserV2
@@ -381,14 +382,14 @@ function SmartFormParserV2({ onClose }) {
         </div>
 
         <div className="p-6">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-            <p className="text-yellow-800 font-medium">Milestone 1 Complete ✓</p>
-            <p className="text-yellow-700 text-sm mt-1">
-              PDF parsing and validation working. Form rendering (Milestone 2) coming next.
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <p className="text-green-800 font-medium">Milestone 2 Complete ✓</p>
+            <p className="text-green-700 text-sm mt-1">
+              PDF parsing, validation, and form rendering working!
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 mb-6">
             <button
               onClick={exportStructure}
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -405,12 +406,16 @@ function SmartFormParserV2({ onClose }) {
             </button>
           </div>
 
-          <div className="mt-6 bg-gray-50 rounded-lg p-4">
-            <p className="font-semibold mb-2">Parsed Structure Preview:</p>
-            <pre className="text-xs bg-white p-3 rounded border overflow-x-auto">
-              {JSON.stringify(formStructure, null, 2)}
-            </pre>
-          </div>
+          {/* Render the actual form */}
+          <FormRenderer
+            formStructure={formStructure}
+            onSubmit={(data) => {
+              console.log('Form submitted:', data);
+              alert('Form submitted successfully! Check console for data.');
+              exportData();
+            }}
+            onCancel={() => setStep(1)}
+          />
         </div>
       </div>
     </div>
