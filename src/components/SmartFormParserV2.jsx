@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, Download, Edit3, Eye, FileText, X } from 'lucide-react';
 import FormRenderer from './FormRenderer';
+import FormStructureEditor from './FormStructureEditor';
 
 /**
  * SmartFormParserV2
@@ -31,11 +32,10 @@ function SmartFormParserV2({ onClose }) {
   // ============================================================================
   
   const [step, setStep] = useState(1); // 1 = upload/import, 2 = form view
+  const [mode, setMode] = useState('fill'); // 'fill' or 'edit'
   const [pdfFile, setPdfFile] = useState(null);
   const [formStructure, setFormStructure] = useState(null);
   const [formData, setFormData] = useState({});
-  const [editMode, setEditMode] = useState(false);
-  const [editingField, setEditingField] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -383,19 +383,47 @@ function SmartFormParserV2({ onClose }) {
 
         <div className="p-6">
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-            <p className="text-green-800 font-medium">Milestone 2 Complete ✓</p>
+            <p className="text-green-800 font-medium">Milestone 3 Complete ✓</p>
             <p className="text-green-700 text-sm mt-1">
-              PDF parsing, validation, and form rendering working!
+              PDF parsing, validation, form rendering, and structure editing all working!
             </p>
           </div>
 
-          <div className="space-y-4 mb-6">
+          {/* Mode Toggle */}
+          <div className="flex items-center gap-4 mb-6">
+            <div className="flex bg-gray-200 rounded-lg p-1">
+              <button
+                onClick={() => setMode('fill')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
+                  mode === 'fill'
+                    ? 'bg-white text-blue-600 shadow'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Eye size={18} />
+                Fill Mode
+              </button>
+              <button
+                onClick={() => setMode('edit')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
+                  mode === 'edit'
+                    ? 'bg-white text-purple-600 shadow'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Edit3 size={18} />
+                Edit Mode
+              </button>
+            </div>
+
+            <div className="flex-1"></div>
+
             <button
               onClick={exportStructure}
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
             >
               <Download size={18} />
-              Export Structure
+              Export
             </button>
             
             <button
@@ -406,16 +434,27 @@ function SmartFormParserV2({ onClose }) {
             </button>
           </div>
 
-          {/* Render the actual form */}
-          <FormRenderer
-            formStructure={formStructure}
-            onSubmit={(data) => {
-              console.log('Form submitted:', data);
-              alert('Form submitted successfully! Check console for data.');
-              exportData();
-            }}
-            onCancel={() => setStep(1)}
-          />
+          {/* Conditional Rendering Based on Mode */}
+          {mode === 'fill' ? (
+            <FormRenderer
+              formStructure={formStructure}
+              onSubmit={(data) => {
+                console.log('Form submitted:', data);
+                alert('Form submitted successfully! Check console for data.');
+                exportData();
+              }}
+              onCancel={() => setStep(1)}
+            />
+          ) : (
+            <FormStructureEditor
+              formStructure={formStructure}
+              onSave={(updatedStructure) => {
+                setFormStructure(updatedStructure);
+                alert('Structure updated! Switch to Fill Mode to preview.');
+              }}
+              onCancel={() => setMode('fill')}
+            />
+          )}
         </div>
       </div>
     </div>
