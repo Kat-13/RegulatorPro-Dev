@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, Download, Edit3, Eye, FileText, X } from 'lucide-react';
+import { Upload, Download, Edit3, Eye, FileText, X, Save } from 'lucide-react';
 import FormRenderer from './FormRenderer';
 import FormStructureEditor from './FormStructureEditor';
 
@@ -401,7 +401,7 @@ function SmartFormParserV2({ onClose }) {
                 }`}
               >
                 <Eye size={18} />
-                Fill Mode
+                Preview
               </button>
               <button
                 onClick={() => setMode('edit')}
@@ -419,11 +419,11 @@ function SmartFormParserV2({ onClose }) {
             <div className="flex-1"></div>
 
             <button
-              onClick={exportStructure}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              onClick={() => alert('Save functionality coming in Milestone 4!')}
+              className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
             >
-              <Download size={18} />
-              Export
+              <Save size={18} />
+              Save
             </button>
             
             <button
@@ -450,7 +450,7 @@ function SmartFormParserV2({ onClose }) {
               formStructure={formStructure}
               onSave={(updatedStructure) => {
                 setFormStructure(updatedStructure);
-                alert('Structure updated! Switch to Fill Mode to preview.');
+                alert('Structure updated! Switch to Preview to see changes.');
               }}
               onCancel={() => setMode('fill')}
             />

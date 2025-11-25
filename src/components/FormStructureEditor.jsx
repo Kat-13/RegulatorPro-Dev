@@ -432,6 +432,57 @@ const FormStructureEditor = ({ formStructure, onSave, onCancel }) => {
               </div>
             )}
 
+            {/* Conditional Logic - Simple UI */}
+            <div className="form-group" style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '6px' }}>
+              <label style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'block' }}>Conditional Visibility</label>
+              
+              <label className="checkbox-label" style={{ marginBottom: '1rem' }}>
+                <input
+                  type="checkbox"
+                  checked={!editingField.field.conditionalOn}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      updateEditingField({ conditionalOn: null, conditionalValue: null });
+                    }
+                  }}
+                />
+                <span>Always show this field</span>
+              </label>
+
+              {!editingField.field.conditionalOn && (
+                <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'white', borderRadius: '4px', border: '1px solid #dee2e6' }}>
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#6c757d' }}>Show this field only when:</label>
+                    <select
+                      value={editingField.field.conditionalOn || ''}
+                      onChange={(e) => updateEditingField({ conditionalOn: e.target.value || null })}
+                      className="input"
+                    >
+                      <option value="">Select a field...</option>
+                      {formStructure.sections.flatMap(s => s.fields)
+                        .filter(f => f.id !== editingField.field.id)
+                        .map(f => (
+                          <option key={f.id} value={f.id}>{f.label} ({f.id})</option>
+                        ))}
+                    </select>
+                  </div>
+                  
+                  {editingField.field.conditionalOn && (
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#6c757d' }}>equals:</label>
+                      <input
+                        type="text"
+                        value={editingField.field.conditionalValue || ''}
+                        onChange={(e) => updateEditingField({ conditionalValue: e.target.value })}
+                        placeholder="Enter value (e.g., Yes)"
+                        className="input"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="modal-actions">
               <button onClick={closeFieldEditor} className="btn-secondary">
                 Cancel
