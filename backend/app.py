@@ -3711,7 +3711,7 @@ def parse_pdf_v2():
         
         # Call OpenAI API using client library
         response = client.chat.completions.create(
-            model='gpt-4.1-mini',
+            model='gpt-4o',
             max_tokens=16000,
             messages=[{
                 'role': 'user',
