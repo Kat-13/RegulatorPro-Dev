@@ -312,3 +312,10 @@ textarea.form-input {
   font-style: italic;
   padding: 4px 0;
 }
+
+/* Checkbox Group Styles */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

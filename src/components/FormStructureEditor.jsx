@@ -422,7 +422,7 @@ const FormStructureEditor = ({ formStructure, onSave, onCancel }) => {
               <small style={{ color: '#6c757d', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>Permanent instructions shown below the field</small>
             </div>
 
-            {editingField.field.type === 'radio' && (
+            {(editingField.field.type === 'radio' || editingField.field.type === 'checkbox') && (
               <div className="form-group">
                 <label>Options (one per line)</label>
                 <textarea
@@ -432,7 +432,11 @@ const FormStructureEditor = ({ formStructure, onSave, onCancel }) => {
                   })}
                   className="input"
                   rows={4}
+                  placeholder={editingField.field.type === 'radio' ? 'e.g.,\nYes\nNo\nNot Sure' : 'e.g.,\nI agree to the terms\nI agree to privacy policy\nSend me updates'}
                 />
+                <small style={{ color: '#6c757d', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
+                  {editingField.field.type === 'radio' ? 'User can select one option' : 'User can select multiple options'}
+                </small>
               </div>
             )}
 

@@ -176,6 +176,33 @@ const FormRenderer = ({ formStructure, onSubmit, onCancel }) => {
         );
       
       case 'checkbox':
+        // If checkbox has options, render multiple checkboxes
+        if (field.options && field.options.length > 0) {
+          const selectedValues = Array.isArray(value) ? value : [];
+          return (
+            <div className="checkbox-group">
+              {field.options.map((option, idx) => (
+                <label key={idx} className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name={field.id}
+                    value={option}
+                    checked={selectedValues.includes(option)}
+                    onChange={(e) => {
+                      const newValues = e.target.checked
+                        ? [...selectedValues, option]
+                        : selectedValues.filter(v => v !== option);
+                      handleFieldChange(field.id, newValues);
+                    }}
+                    onBlur={() => handleFieldBlur(field.id)}
+                  />
+                  <span>{option}</span>
+                </label>
+              ))}
+            </div>
+          );
+        }
+        // Single checkbox (boolean)
         return (
           <label className="checkbox-label">
             <input
