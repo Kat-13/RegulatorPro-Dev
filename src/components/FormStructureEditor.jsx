@@ -399,23 +399,27 @@ const FormStructureEditor = ({ formStructure, onSave, onCancel }) => {
             </div>
 
             <div className="form-group">
-              <label>Placeholder</label>
+              <label>Hint Text (optional)</label>
               <input
                 type="text"
                 value={editingField.field.placeholder}
                 onChange={(e) => updateEditingField({ placeholder: e.target.value })}
                 className="input"
+                placeholder="e.g., Enter your email address"
               />
+              <small style={{ color: '#6c757d', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>Gray text inside the empty field that disappears when typing</small>
             </div>
 
             <div className="form-group">
-              <label>Help Text</label>
+              <label>Instructions (optional)</label>
               <textarea
                 value={editingField.field.helpText}
                 onChange={(e) => updateEditingField({ helpText: e.target.value })}
                 className="input"
                 rows={2}
+                placeholder="e.g., Use your legal name as it appears on your license"
               />
+              <small style={{ color: '#6c757d', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>Permanent instructions shown below the field</small>
             </div>
 
             {editingField.field.type === 'radio' && (
@@ -436,17 +440,22 @@ const FormStructureEditor = ({ formStructure, onSave, onCancel }) => {
             <div className="form-group" style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '6px' }}>
               <label style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'block' }}>Conditional Visibility</label>
               
-              <label className="checkbox-label" style={{ marginBottom: '1rem' }}>
+              <label className="checkbox-label" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
                   checked={!!editingField.field.conditionalOn}
                   onChange={(e) => {
-                    if (!e.target.checked) {
+                    if (e.target.checked) {
+                      // When checking, initialize with empty values so UI shows
+                      updateEditingField({ conditionalOn: '', conditionalValue: '' });
+                    } else {
+                      // When unchecking, clear the conditional logic
                       updateEditingField({ conditionalOn: null, conditionalValue: null });
                     }
                   }}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer', margin: 0 }}
                 />
-                <span>Only show this field conditionally</span>
+                <span style={{ userSelect: 'none' }}>Only show this field conditionally</span>
               </label>
 
               {editingField.field.conditionalOn && (
