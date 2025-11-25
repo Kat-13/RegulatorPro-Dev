@@ -239,6 +239,43 @@ function SmartFormParserV2({ onClose }) {
     URL.revokeObjectURL(url);
   };
 
+  const saveToKanban = async () => {
+    if (!formStructure) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/application-types', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: formStructure.title,
+          description: `Parsed from PDF: ${pdfFile?.name || 'Unknown'}`,
+          status: 'draft',
+          form_definition: JSON.stringify(formStructure),
+          source_document: pdfFile?.name || 'Unknown',
+          parser_version: 'v2',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save to Kanban');
+      }
+
+      const result = await response.json();
+      alert(`✅ Saved as draft Application Type!\n\nName: ${formStructure.title}\nStatus: Draft\n\nYou can now publish it from the Kanban board.`);
+      onClose(); // Close the parser modal
+    } catch (err) {
+      setError(`Save failed: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const exportData = () => {
     const blob = new Blob([JSON.stringify(formData, null, 2)], {
       type: 'application/json'
@@ -419,11 +456,12 @@ function SmartFormParserV2({ onClose }) {
             <div className="flex-1"></div>
 
             <button
-              onClick={() => alert('Save functionality coming in Milestone 4!')}
+              onClick={saveToKanban}
               className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+              disabled={loading}
             >
               <Save size={18} />
-              Save
+              {loading ? 'Saving...' : 'Save to Kanban'}
             </button>
             
             <button
