@@ -439,17 +439,17 @@ const FormStructureEditor = ({ formStructure, onSave, onCancel }) => {
               <label className="checkbox-label" style={{ marginBottom: '1rem' }}>
                 <input
                   type="checkbox"
-                  checked={!editingField.field.conditionalOn}
+                  checked={!!editingField.field.conditionalOn}
                   onChange={(e) => {
-                    if (e.target.checked) {
+                    if (!e.target.checked) {
                       updateEditingField({ conditionalOn: null, conditionalValue: null });
                     }
                   }}
                 />
-                <span>Always show this field</span>
+                <span>Only show this field conditionally</span>
               </label>
 
-              {!editingField.field.conditionalOn && (
+              {editingField.field.conditionalOn && (
                 <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'white', borderRadius: '4px', border: '1px solid #dee2e6' }}>
                   <div style={{ marginBottom: '0.75rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#6c757d' }}>Show this field only when:</label>
@@ -467,18 +467,16 @@ const FormStructureEditor = ({ formStructure, onSave, onCancel }) => {
                     </select>
                   </div>
                   
-                  {editingField.field.conditionalOn && (
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#6c757d' }}>equals:</label>
-                      <input
-                        type="text"
-                        value={editingField.field.conditionalValue || ''}
-                        onChange={(e) => updateEditingField({ conditionalValue: e.target.value })}
-                        placeholder="Enter value (e.g., Yes)"
-                        className="input"
-                      />
-                    </div>
-                  )}
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#6c757d' }}>equals:</label>
+                    <input
+                      type="text"
+                      value={editingField.field.conditionalValue || ''}
+                      onChange={(e) => updateEditingField({ conditionalValue: e.target.value })}
+                      placeholder="Enter value (e.g., Yes)"
+                      className="input"
+                    />
+                  </div>
                 </div>
               )}
             </div>
