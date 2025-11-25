@@ -3702,26 +3702,37 @@ def parse_pdf_v2():
         if not file.filename.endswith('.pdf'):
             return jsonify({'error': 'Only PDF files are allowed'}), 400
         
-        # Read file and convert to base64
+        # Read file and convert PDF to images
+        from pdf2image import convert_from_bytes
+        from io import BytesIO
+        from PIL import Image
+        
         file_content = file.read()
-        base64_pdf = base64.b64encode(file_content).decode('utf-8')
         
-        # Initialize OpenAI client (auto-configured from environment)
-        client = OpenAI()
+        # Convert PDF to images (first 5 pages max to avoid token limits)
+        images = convert_from_bytes(file_content, dpi=150, first_page=1, last_page=5)
         
-        # Call OpenAI API using client library
-        response = client.chat.completions.create(
-            model='gpt-4o',
-            max_tokens=16000,
-            messages=[{
-                'role': 'user',
-                'content': [
-                    {
-                        'type': 'image_url',
-                        'image_url': {
-                            'url': f'data:application/pdf;base64,{base64_pdf}'
-                        }
-                    },
+        # Convert images to base64
+        image_contents = []
+        for img in images:
+            buffered = BytesIO()
+            img.save(buffered, format="PNG")
+            img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+            image_contents.append({
+                'type': 'image_url',
+                'image_url': {
+                    'url': f'data:image/png;base64,{img_base64}'
+                }
+            })
+        
+        # Initialize OpenAI client with explicit base URL to bypass Manus proxy
+        client = OpenAI(
+            api_key=os.environ.get('OPENAI_API_KEY'),
+            base_url='https://api.openai.com/v1'
+        )
+        
+        # Build message content with all images
+        content = image_contents + [
                     {
                         'type': 'text',
                         'text': '''Parse this licensing board PDF form into a structured JSON schema.
@@ -3767,6 +3778,14 @@ STRICT RULES:
 Return ONLY the JSON object.'''
                     }
                 ]
+        
+        # Call OpenAI API using client library
+        response = client.chat.completions.create(
+            model='gpt-4o',
+            max_tokens=16000,
+            messages=[{
+                'role': 'user',
+                'content': content
             }]
         )
         
@@ -3818,15 +3837,20 @@ Return ONLY the JSON object.'''
                 'total_sections': len(parsed_form.get('sections', [])),
                 'total_fields': sum(len(s.get('fields', [])) for s in parsed_form.get('sections', []))
             }
-        })
-        
+        })        
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"\n=== ERROR in parse_pdf_v2 ===")
+        print(error_details)
+        print(f"=== END ERROR ===")
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': str(e),
+            'type': type(e).__name__
         }), 500
 
-# Register multi-step wizard endpoints
+# Register multi-step wizard endpointss
 from multistep_wizard_endpoints import register_multistep_endpoints
 register_multistep_endpoints(app, db, ApplicationSubmission, ApplicationType)
 
