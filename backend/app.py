@@ -3732,11 +3732,8 @@ def parse_pdf_v2():
                 }
             })
         
-        # Initialize OpenAI client with explicit base URL to bypass Manus proxy
-        client = OpenAI(
-            api_key=os.environ.get('OPENAI_API_KEY'),
-            base_url='https://api.openai.com/v1'
-        )
+        # Initialize OpenAI client (uses Manus pre-configured proxy)
+        client = OpenAI()
         
         # Build message content with all images
         content = image_contents + [
