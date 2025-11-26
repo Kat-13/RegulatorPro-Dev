@@ -19,9 +19,16 @@ from field_library_import import FieldLibraryImporter
 # from field_matching_api import SmartFieldMatcher  # Temporarily disabled
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///regulatory_platform.db'
+
+# Database configuration - use PostgreSQL in production, SQLite in development
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
+    # Railway/Heroku uses postgres:// but SQLAlchemy needs postgresql://
+    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL or 'sqlite:///regulatory_platform.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'regulatory-platform-secret-key-2024'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'regulatory-platform-secret-key-2024')
 
 # CORS configuration - CRITICAL: Do not expose port 5000, only allow frontend port
 CORS(app, origins=["http://localhost:5173", "http://localhost:5174", "https://5173-if4j0l8kg1824dwz6da49-f18e74fa.manusvm.computer", "https://5173-i4u5q4wzga20dqo40gx3x-50251577.manusvm.computer", "https://5174-il8ahvphl45ebyegku7xd-18318e58.manusvm.computer"], supports_credentials=True)
