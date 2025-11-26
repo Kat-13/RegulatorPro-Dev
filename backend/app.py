@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file, session
+from flask import Flask, request, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from datetime import datetime
@@ -6,6 +6,10 @@ import json
 import re
 from rule_engine import RuleEngine
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 from csv_parser import CSVParser
 from document_utils import save_uploaded_file, delete_file, categorize_file, get_mime_type
 from auth_utils import hash_password, verify_password, create_session, verify_session, destroy_session, require_auth
