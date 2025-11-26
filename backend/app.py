@@ -3732,8 +3732,12 @@ def parse_pdf_v2():
                 }
             })
         
-        # Initialize OpenAI client (uses Manus pre-configured proxy)
-        client = OpenAI()
+        # Initialize OpenAI client with user's API key (not Manus proxy)
+        # Manus proxy doesn't support gpt-4o, only gemini-2.5-flash, gpt-4.1-mini, gpt-4.1-nano
+        client = OpenAI(
+            api_key=os.environ.get('OPENAI_API_KEY'),
+            base_url='https://api.openai.com/v1'
+        )
         
         # Build message content with all images
         content = image_contents + [
